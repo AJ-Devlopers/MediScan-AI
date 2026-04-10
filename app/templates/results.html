@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis Results{% endblock %}
+
+{% block topbar_title %}
+  Analysis Results
+  <small>
+    {% if result and result.patient %}
+      {{ result.patient.name or 'Unknown Patient' }} &mdash;
+      {{ result.patient.date or '' }}
+    {% else %}
+      Medical Report Analysis
+    {% endif %}
+  </small>
+{% endblock %}
+
+{% block content %}
+
+{% if not result %}
+  <div class="empty-state">
+    <div class="empty-state-icon">⚠️</div>
+    <h3>No Results Available</h3>
+    <p>Please upload and analyze a medical report first.</p>
+    <a href="{{ url_for('module1.index') }}" class="btn btn-primary">← Back to Dashboard</a>
+  </div>
+
+{% else %}
+
+  {% set patient  = result.patient  or {} %}
+  {% set summary  = result.summary  or {} %}
+  {% set tests    = result.data     or [] %}
+  {% set suggestions = result.suggestions or [] %}
+
+  <!-- Patient Card -->
+  <div class="patient-card">
+    <div class="patient-avatar">
+      {{ (patient.name or 'U')[:2]|upper }}
+    </div>
+    <div class="patient-details">
+      <div class="patient-name">{{ patient.name or 'Unknown Patient' }}</div>
+      <div class="patient-meta">
+        {% if patient.age %}
+          <div class="patient-meta-item"><span>🎂</span> {{ patient.age }} yrs</div>
+        {% endif %}
+        {% if patient.gender %}
+          <div class="patient-meta-item"><span>⚥</span> {{ patient.gender }}</div>
+        {% endif %}
+        {% if patient.doctor %}
+          <div class="patient-meta-item"><span>🩺</span> {{ patient.doctor }}</div>
+        {% endif %}
+        {% if patient.lab %}
+          <div class="patient-meta-item"><span>🏥</span> {{ patient.lab }}</div>
+        {% endif %}
+        {% if patient.date %}
+          <div class="patient-meta-item"><span>📅</span> {{ patient.date }}</div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="patient-badges">
+      <div class="badge">
+        {{ summary.score or 0 }}<span>Health Score</span>
+      </div>
+      <div class="badge" style="color:var(--red)">
+        {{ summary.high or 0 }}<span>High</span>
+      </div>
+      <div class="badge" style="color:var(--amber)">
+        {{ summary.low or 0 }}<span>Low</span>
+      </div>
+      <div class="badge" style="color:var(--green)">
+        {{ summary.normal or 0 }}<span>Normal</span>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Stats Row -->
+  <div class="stats-grid stagger">
+    <div class="stat-card">
+      <div class="stat-icon teal">🧪</div>
+      <div class="stat-body">
+        <div class="stat-value teal">{{ tests|length }}</div>
+        <div class="stat-label">Total Tests</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon red">🔴</div>
+      <div class="stat-body">
+        <div class="stat-value red">{{ summary.high or 0 }}</div>
+        <div class="stat-label">High Values</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon amber">🟡</div>
+      <div class="stat-body">
+        <div class="stat-value amber">{{ summary.low or 0 }}</div>
+        <div class="stat-label">Low Values</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green">🟢</div>
+      <div class="stat-body">
+        <div class="stat-value green">{{ summary.normal or 0 }}</div>
+        <div class="stat-label">Normal Values</div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Health Score -->
+  {% set score = summary.score or 0 %}
+  {% set total = (summary.high or 0) + (summary.low or 0) + (summary.normal or 0) %}
+  {% if total == 0 %}{% set total = 1 %}{% endif %}
+
+  <div class="health-score-card">
+    <div class="score-ring-wrap">
+      <svg class="score-ring" viewBox="0 0 120 120">
+        <circle class="score-ring-bg" cx="60" cy="60" r="50"/>
+        <circle class="score-ring-fill" id="ringFill" cx="60" cy="60" r="50"
+          stroke-dasharray="314.16"
+          stroke-dashoffset="{{ 314.16 - (score / 100 * 314.16) }}"
+          style="stroke: {% if score >= 80 %}var(--teal){% elif score >= 60 %}var(--amber){% else %}var(--red){% endif %}"
+        />
+      </svg>
+      <div class="score-center">
+        <div class="score-number" style="color: {% if score >= 80 %}var(--teal){% elif score >= 60 %}var(--amber){% else %}var(--red){% endif %}">
+          {{ score }}
+        </div>
+        <div class="score-unit">/100</div>
+      </div>
+    </div>
+
+    <div class="score-info">
+      <h3>
+        {% if score >= 80 %}Excellent Health Profile
+        {% elif score >= 60 %}Moderate Health Profile
+        {% elif score >= 40 %}Needs Attention
+        {% else %}Critical — Consult Doctor
+        {% endif %}
+      </h3>
+      <p>Based on {{ tests|length }} tests analyzed. {{ summary.high or 0 }} high, {{ summary.low or 0 }} low, {{ summary.normal or 0 }} normal values detected.</p>
+      <div class="score-bars">
+        <div class="score-bar-item">
+          <span class="score-bar-label" style="color:var(--red)">High</span>
+          <div class="score-bar-track">
+            <div class="score-bar-fill" style="width:{{ ((summary.high or 0) / total * 100)|round }}%;background:var(--red)"></div>
+          </div>
+          <span class="score-bar-count">{{ summary.high or 0 }}</span>
+        </div>
+        <div class="score-bar-item">
+          <span class="score-bar-label" style="color:var(--amber)">Low</span>
+          <div class="score-bar-track">
+            <div class="score-bar-fill" style="width:{{ ((summary.low or 0) / total * 100)|round }}%;background:var(--amber)"></div>
+          </div>
+          <span class="score-bar-count">{{ summary.low or 0 }}</span>
+        </div>
+        <div class="score-bar-item">
+          <span class="score-bar-label" style="color:var(--green)">Normal</span>
+          <div class="score-bar-track">
+            <div class="score-bar-fill" style="width:{{ ((summary.normal or 0) / total * 100)|round }}%;background:var(--green)"></div>
+          </div>
+          <span class="score-bar-count">{{ summary.normal or 0 }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Export Banner -->
+  <div class="report-banner">
+    <div class="report-banner-icon">📑</div>
+    <div class="report-banner-text">
+      <h4>Export Full Report</h4>
+      <p>Download a complete PDF with all test results, health score, and recommendations.</p>
+    </div>
+    <a href="/download-report" class="btn btn-primary btn-sm">⬇ Download PDF</a>
+  </div>
+
+
+  <!-- Test Results -->
+  <div class="section-header">
+    <div class="section-title">Test Results ({{ tests|length }})</div>
+    <a href="{{ url_for('module1.index') }}" class="btn btn-secondary btn-sm">← New Analysis</a>
+  </div>
+
+  <!-- Category Tabs (rendered by JS below) -->
+  <div class="category-tabs" id="categoryTabs"></div>
+
+  <div class="results-table-wrap">
+    <div class="results-toolbar">
+      <div class="search-input-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%)">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" class="search-input" id="tableSearch"
+               placeholder="Search tests, categories…"
+               oninput="onTableSearch(this.value)">
+      </div>
+      <div class="filter-pills">
+        <button class="pill active-all" onclick="filterByStatus('all', this)">All</button>
+        <button class="pill" onclick="filterByStatus('HIGH', this)">🔴 High</button>
+        <button class="pill" onclick="filterByStatus('LOW', this)">🟡 Low</button>
+        <button class="pill" onclick="filterByStatus('NORMAL', this)">🟢 Normal</button>
+      </div>
+    </div>
+
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Test Name</th>
+            <th>Value</th>
+            <th>Normal Range</th>
+            <th>Status</th>
+            <th>Category</th>
+            <th>Subcategory</th>
+          </tr>
+        </thead>
+        <tbody id="resultsBody">
+          {% for item in tests %}
+          {% set status = item.status or 'UNKNOWN' %}
+          {% set rng = item.normal_range or {} %}
+          <tr>
+            <td>
+              <div class="td-test-name">{{ item.name or '—' }}</div>
+              <div class="td-category">
+                {{ item.category or '' }}{% if item.subcategory %} · {{ item.subcategory }}{% endif %}
+              </div>
+            </td>
+            <td>
+              <div class="td-value" style="color:
+                {% if status == 'HIGH' %}var(--red)
+                {% elif status == 'LOW' %}var(--amber)
+                {% elif status == 'NORMAL' %}var(--green)
+                {% else %}var(--text-muted){% endif %}
+              ">
+                {{ item.value if item.value is not none else '—' }}
+                <span style="font-size:11px;color:var(--text-muted)">{{ item.unit or '' }}</span>
+              </div>
+            </td>
+            <td class="td-range">
+              {% if rng.low is not none and rng.high is not none %}
+                {{ rng.low }} – {{ rng.high }} {{ item.unit or '' }}
+              {% else %}—{% endif %}
+            </td>
+            <td>
+              <span class="status-badge status-{{ status }}">{{ status }}</span>
+            </td>
+            <td style="font-size:13px;color:var(--text-secondary)">{{ item.category or '—' }}</td>
+            <td style="font-size:13px;color:var(--text-muted)">{{ item.subcategory or '—' }}</td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" class="table-empty">
+              <div class="empty-icon">🔍</div>
+              No test data extracted
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- Suggestions -->
+  {% if suggestions %}
+  <div class="section-header" style="margin-top:8px">
+    <div class="section-title">AI Recommendations</div>
+  </div>
+  <div class="suggestions-grid stagger">
+    {% set icons = ['💊','🥗','💧','🏃','🛌','🩺','🫀','🧪','🧠','⚡','🧘','🥤'] %}
+    {% for suggestion in suggestions %}
+    <div class="suggestion-card">
+      <div class="suggestion-icon">{{ icons[loop.index0 % icons|length] }}</div>
+      <div class="suggestion-text">{{ suggestion }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+{% endif %}
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+  // Hydrate JS filter/search with server-side data
+  document.addEventListener('DOMContentLoaded', () => {
+    const rawData = {{ result.data | tojson if result else '[]' }};
+    if (rawData && rawData.length > 0) {
+      allTests = rawData;
+      const categories = [...new Set(rawData.map(t => t.category || 'Other').filter(Boolean))];
+      renderCategoryTabs(categories, rawData);
+    }
+  });
+</script>
+{% endblock %}

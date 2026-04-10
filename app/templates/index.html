@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block topbar_title %}
+  Dashboard
+  <small>Upload and analyze medical reports with AI</small>
+{% endblock %}
+
+{% block content %}
+
+<!-- Upload Hero -->
+<div class="upload-hero" id="uploadZone">
+  <div class="upload-icon-wrap">📄</div>
+  <h2>Upload Medical Report</h2>
+  <p>Drag & drop a PDF report here, or click to browse. AI will extract, categorize, and evaluate all test values instantly.</p>
+
+  <div class="upload-btn-row">
+    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+      📂 Browse Files
+    </button>
+    <button class="btn btn-primary" id="analyzeBtn" disabled onclick="submitAnalysis()">
+      🔬 Analyze Report
+    </button>
+    <button class="btn btn-secondary" onclick="UploadZone.clear()">
+      🗑 Clear
+    </button>
+  </div>
+
+  <div class="file-selected-info" id="fileInfo" style="display:none"></div>
+
+  <input type="file" id="fileInput" class="file-input-hidden" accept=".pdf">
+</div>
+
+
+<!-- Stats Row (hidden until results load) -->
+<div class="stats-grid stagger" id="statsGrid" style="display:none">
+  <div class="stat-card">
+    <div class="stat-icon teal">🧪</div>
+    <div class="stat-body">
+      <div class="stat-value teal" id="statTotal">0</div>
+      <div class="stat-label">Total Tests</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon red">🔴</div>
+    <div class="stat-body">
+      <div class="stat-value red" id="statHigh">0</div>
+      <div class="stat-label">High Values</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon amber">🟡</div>
+    <div class="stat-body">
+      <div class="stat-value amber" id="statLow">0</div>
+      <div class="stat-label">Low Values</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-icon green">🟢</div>
+    <div class="stat-body">
+      <div class="stat-value green" id="statNormal">0</div>
+      <div class="stat-label">Normal Values</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Results Section (hidden until results load) -->
+<div id="resultsSection" style="display:none">
+
+  <!-- Patient Card -->
+  <div class="patient-card" id="patientCard" style="display:none"></div>
+
+  <!-- Health Score -->
+  <div class="health-score-card" id="scoreCard" style="display:none">
+    <div class="score-ring-wrap">
+      <svg class="score-ring" viewBox="0 0 120 120">
+        <circle class="score-ring-bg" cx="60" cy="60" r="50"/>
+        <circle class="score-ring-fill" id="ringFill" cx="60" cy="60" r="50"
+          stroke-dasharray="314.16"
+          stroke-dashoffset="314.16"
+        />
+      </svg>
+      <div class="score-center">
+        <div class="score-number" id="scoreNumber">—</div>
+        <div class="score-unit">/100</div>
+      </div>
+    </div>
+
+    <div class="score-info">
+      <h3>Overall Health Score</h3>
+      <p>Calculated from your test results. Higher values indicate more parameters within normal range.</p>
+      <div class="score-bars">
+        <div class="score-bar-item">
+          <span class="score-bar-label" style="color:var(--red)">High</span>
+          <div class="score-bar-track"><div class="score-bar-fill" id="bar1" style="width:0%;background:var(--red)"></div></div>
+          <span class="score-bar-count" id="statHigh2">0</span>
+        </div>
+        <div class="score-bar-item">
+          <span class="score-bar-label" style="color:var(--amber)">Low</span>
+          <div class="score-bar-track"><div class="score-bar-fill" id="bar2" style="width:0%;background:var(--amber)"></div></div>
+          <span class="score-bar-count" id="statLow2">0</span>
+        </div>
+        <div class="score-bar-item">
+          <span class="score-bar-label" style="color:var(--green)">Normal</span>
+          <div class="score-bar-track"><div class="score-bar-fill" id="bar3" style="width:0%;background:var(--green)"></div></div>
+          <span class="score-bar-count" id="statNormal2">0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Download Banner -->
+  <div class="report-banner" id="reportBanner" style="display:none">
+    <div class="report-banner-icon">📑</div>
+    <div class="report-banner-text">
+      <h4>Export Full Report</h4>
+      <p>Download a detailed PDF report with all test results, analysis, and recommendations.</p>
+    </div>
+    <a href="/download-report" class="btn btn-primary btn-sm">⬇ Download PDF</a>
+  </div>
+
+  <!-- Test Results Table -->
+  <div class="section-header">
+    <div class="section-title">Test Results</div>
+  </div>
+
+  <!-- Category Tabs -->
+  <div class="category-tabs" id="categoryTabs"></div>
+
+  <div class="results-table-wrap">
+    <div class="results-toolbar">
+      <div class="search-input-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:10px;top:50%;transform:translateY(-50%)">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" class="search-input" id="tableSearch"
+               placeholder="Search tests, categories…"
+               oninput="onTableSearch(this.value)">
+      </div>
+
+      <div class="filter-pills">
+        <button class="pill active-all" onclick="filterByStatus('all', this)">All</button>
+        <button class="pill" onclick="filterByStatus('HIGH', this)">🔴 High</button>
+        <button class="pill" onclick="filterByStatus('LOW', this)">🟡 Low</button>
+        <button class="pill" onclick="filterByStatus('NORMAL', this)">🟢 Normal</button>
+      </div>
+    </div>
+
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Test Name</th>
+            <th>Value</th>
+            <th>Normal Range</th>
+            <th>Status</th>
+            <th>Category</th>
+            <th>Subcategory</th>
+          </tr>
+        </thead>
+        <tbody id="resultsBody">
+          <tr>
+            <td colspan="6" class="table-empty">
+              <div class="empty-icon">🩺</div>
+              <div>Upload a report to see test results</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Suggestions -->
+  <div class="section-header">
+    <div class="section-title">AI Recommendations</div>
+  </div>
+  <div class="suggestions-grid" id="suggestionsGrid"></div>
+
+</div>
+
+
+<!-- Empty State (shown before first upload) -->
+<div class="empty-state" id="emptyState">
+  <div class="empty-state-icon">🩺</div>
+  <h3>No Report Analyzed Yet</h3>
+  <p>Upload a blood test PDF report above to get an instant AI-powered analysis with health score, categorized results, and personalized recommendations.</p>
+  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;text-align:center;min-width:120px">
+      <div style="font-size:24px;margin-bottom:6px">🔬</div>
+      <div style="font-size:12px;color:var(--text-secondary)">Extract Values</div>
+    </div>
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;text-align:center;min-width:120px">
+      <div style="font-size:24px;margin-bottom:6px">📊</div>
+      <div style="font-size:12px;color:var(--text-secondary)">Compare Ranges</div>
+    </div>
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;text-align:center;min-width:120px">
+      <div style="font-size:24px;margin-bottom:6px">💡</div>
+      <div style="font-size:12px;color:var(--text-secondary)">Get Suggestions</div>
+    </div>
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;text-align:center;min-width:120px">
+      <div style="font-size:24px;margin-bottom:6px">📑</div>
+      <div style="font-size:12px;color:var(--text-secondary)">Download Report</div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+  // Show stats grid and hide empty state after results render
+  const _origRenderResults = renderResults;
+  renderResults = function(data) {
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('statsGrid').style.display = 'grid';
+    // Sync secondary stat counts
+    const s = data.summary || {};
+    const syncEl = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+    syncEl('statHigh2',   s.high   || 0);
+    syncEl('statLow2',    s.low    || 0);
+    syncEl('statNormal2', s.normal || 0);
+    _origRenderResults(data);
+  };
+</script>
+{% endblock %}
