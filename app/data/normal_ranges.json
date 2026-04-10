@@ -1,0 +1,17 @@
+{
+  "biochemistry": {
+    "liver": [],
+    "kidney": [],
+    "lipid": [],
+    "diabetes": [],
+    "electrolytes": []
+  },
+  "hematology": {
+    "cbc": [],
+    "wbc": [],
+    "platelets": []
+  },
+  "endocrinology": {
+    "thyroid": []
+  }
+}

@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+jinja2
+python-multipart
+aiofiles
+python-dotenv
+groq
+pymupdf
+pydantic
+sqlalchemy
+chromadb
+sentence-transformers
+langchain
+langgraph
+reportlab
+orjson

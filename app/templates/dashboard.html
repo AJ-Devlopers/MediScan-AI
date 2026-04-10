@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="card">
+    <h2>📊 Medical Dashboard</h2>
+
+    <form action="/analyze-full" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" required>
+        <input type="text" name="question" placeholder="Ask something (optional)">
+        <button type="submit">Run Full Analysis</button>
+    </form>
+</div>
+
+{% if result %}
+<div class="card">
+    <h2>🧪 Report Analysis</h2>
+
+    <table>
+        <tr>
+            <th>Test</th>
+            <th>Value</th>
+            <th>Range</th>
+            <th>Status</th>
+        </tr>
+
+        {% for item in result.report_data %}
+        <tr class="{{ item.status }}">
+            <td>{{ item.name }}</td>
+            <td>{{ item.value }}</td>
+            <td>
+                {{ item.normal_range.low }} - {{ item.normal_range.high }}
+            </td>
+            <td>{{ item.status }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+<div class="card">
+    <h2>🤖 AI Suggestions</h2>
+    <ul>
+        {% for s in result.agent_analysis %}
+        <li>{{ s }}</li>
+        {% endfor %}
+    </ul>
+</div>
+
+<div class="card">
+    <h2>💬 RAG Answer</h2>
+    <p>{{ result.rag_response }}</p>
+</div>
+
+<p class="warning">⚠️ This is AI-generated. Consult a doctor.</p>
+{% endif %}
+
+{% endblock %}

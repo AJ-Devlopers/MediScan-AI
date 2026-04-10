@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MediScan AI</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- 🔷 SIDEBAR -->
+    <div class="sidebar">
+        <h2 class="logo">MediScan</h2>
+
+        <a href="/" class="nav-item">📄 Module 1</a>
+        <a href="#" class="nav-item">🤖 RAG Chat</a>
+        <a href="#" class="nav-item">🧠 Agents</a>
+        <a href="#" class="nav-item">📊 Dashboard</a>
+    </div>
+
+    <!-- 🔷 MAIN -->
+    <div class="main">
+        {% block content %}{% endblock %}
+    </div>
+
+</div>
+
+</body>
+</html>

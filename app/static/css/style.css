@@ -1,0 +1,108 @@
+/* 🔷 THEME */
+:root {
+    --bg: #eef5ff;
+    --card: #ffffff;
+    --primary: #2563eb;
+    --border: #e2e8f0;
+    --green: #16a34a;
+    --red: #dc2626;
+    --orange: #d97706;
+}
+
+/* BODY */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: var(--bg);
+}
+
+/* LAYOUT */
+.app { display: flex; }
+
+.sidebar {
+    width: 220px;
+    height: 100vh;
+    background: var(--primary);
+    color: white;
+    padding: 20px;
+    position: fixed;
+}
+
+.nav-item {
+    display: block;
+    color: white;
+    margin: 10px 0;
+    padding: 8px;
+    text-decoration: none;
+}
+
+.main {
+    margin-left: 240px;
+    padding: 25px;
+    width: 100%;
+}
+
+/* CARD */
+.card {
+    background: var(--card);
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+}
+
+/* SUMMARY */
+.summary-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 10px;
+}
+
+.score-box {
+    background: var(--primary);
+    color: white;
+    text-align: center;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.stat {
+    text-align: center;
+    padding: 10px;
+    background: #f8fbff;
+    border-radius: 8px;
+}
+
+.stat.high { border-left: 5px solid var(--red); }
+.stat.low { border-left: 5px solid var(--orange); }
+.stat.normal { border-left: 5px solid var(--green); }
+
+/* PATIENT */
+.patient-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+/* TABLE */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th {
+    background: var(--primary);
+    color: white;
+    padding: 8px;
+}
+
+td {
+    padding: 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+/* STATUS TEXT ONLY */
+.status.HIGH { color: var(--red); font-weight: bold; }
+.status.LOW { color: var(--orange); font-weight: bold; }
+.status.NORMAL { color: var(--green); font-weight: bold; }
