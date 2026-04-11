@@ -1,1 +1,9 @@
+# Ignore uploaded files
+uploads/
+*.pdf
+
+# Optional
+*.log
 .env
+venv/
+__pycache__/
