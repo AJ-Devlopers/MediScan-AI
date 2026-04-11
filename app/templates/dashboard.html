@@ -1,57 +1,157 @@
 {% extends "base.html" %}
 
+{% block nav_dashboard %}active{% endblock %}
+{% block page_title %}Full Dashboard{% endblock %}
+{% block page_subtitle %}Complete medical analysis — all modules combined{% endblock %}
+
 {% block content %}
 
-<div class="card">
-    <h2>📊 Medical Dashboard</h2>
+<!-- UPLOAD -->
+<div class="upload-zone-wrapper">
+    <div class="upload-zone dashboard-upload">
+        <div class="dashboard-upload-content">
+            <div>
+                <h3 class="upload-title" style="text-align:left; margin-bottom: 6px;">Run Complete Analysis</h3>
+                <p class="upload-sub" style="text-align:left; margin:0;">Runs all three modules: Extractor · RAG · Agents</p>
+            </div>
+            <form action="/analyze-full" method="post" enctype="multipart/form-data" id="dashForm" style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                <label class="upload-btn" for="dashFile">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <path d="M7 1v8M4 4l3-3 3 3M2 10v1.5A1.5 1.5 0 003.5 13h7A1.5 1.5 0 0012 11.5V10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Choose PDF
+                </label>
+                <input type="file" name="file" id="dashFile" accept=".pdf" required style="display:none;" onchange="handleDashFile(this)">
+                <input type="text" name="question" placeholder="Ask a question (optional)" class="text-input" id="dashQuestion">
+                <button type="submit" class="btn-primary" onclick="showDashLoading()">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <path d="M7 1l1.5 4 4.3.4L9.6 8l.8 4.2L7 10l-3.4 2.2.8-4.2L2.2 5.4l4.3-.4L7 1Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+                    </svg>
+                    Run Full Analysis
+                </button>
+            </form>
+        </div>
+        <div id="dashFileDisplay" class="dash-file-display" style="display:none;">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M2 2h7l3 3v7H2V2Z" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M9 2v3h3" stroke="currentColor" stroke-width="1.2"/>
+            </svg>
+            <span id="dashFileName">No file</span>
+        </div>
+    </div>
+</div>
 
-    <form action="/analyze-full" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" required>
-        <input type="text" name="question" placeholder="Ask something (optional)">
-        <button type="submit">Run Full Analysis</button>
-    </form>
+<div class="loading-overlay" id="dashLoading" style="display:none;">
+    <div class="loading-card">
+        <div class="loading-pulse"></div>
+        <h3>Full Pipeline Running</h3>
+        <p>Running all three AI modules in sequence…</p>
+        <div class="loading-steps">
+            <div class="step active">Module 1 — Extracting</div>
+            <div class="step">Module 2 — RAG Query</div>
+            <div class="step">Module 3 — Agent Analysis</div>
+        </div>
+    </div>
 </div>
 
 {% if result %}
-<div class="card">
-    <h2>🧪 Report Analysis</h2>
 
-    <table>
-        <tr>
-            <th>Test</th>
-            <th>Value</th>
-            <th>Range</th>
-            <th>Status</th>
-        </tr>
+<!-- 4-STAT ROW -->
+<div class="dash-stats-row">
+    <div class="dash-stat">
+        <span class="dash-stat-label">Tests Analyzed</span>
+        <span class="dash-stat-num">{{ result.report_data | length }}</span>
+    </div>
+    <div class="dash-stat high-card">
+        <span class="dash-stat-label">High</span>
+        <span class="dash-stat-num">{{ result.report_data | selectattr('status','eq','HIGH') | list | length }}</span>
+    </div>
+    <div class="dash-stat low-card">
+        <span class="dash-stat-label">Low</span>
+        <span class="dash-stat-num">{{ result.report_data | selectattr('status','eq','LOW') | list | length }}</span>
+    </div>
+    <div class="dash-stat normal-card">
+        <span class="dash-stat-label">Normal</span>
+        <span class="dash-stat-num">{{ result.report_data | selectattr('status','eq','NORMAL') | list | length }}</span>
+    </div>
+</div>
 
-        {% for item in result.report_data %}
-        <tr class="{{ item.status }}">
-            <td>{{ item.name }}</td>
-            <td>{{ item.value }}</td>
-            <td>
-                {{ item.normal_range.low }} - {{ item.normal_range.high }}
-            </td>
-            <td>{{ item.status }}</td>
-        </tr>
-        {% endfor %}
+<!-- REPORT DATA TABLE -->
+<div class="section-header">
+    <span class="section-line"></span>
+    <h2 class="section-title">Report Analysis</h2>
+</div>
+
+<div class="data-card">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Test</th>
+                <th>Value</th>
+                <th>Normal Range</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in result.report_data %}
+            <tr class="table-row">
+                <td class="test-name">{{ item.name }}</td>
+                <td class="test-value mono">{{ item.value }}</td>
+                <td class="test-range mono">{{ item.normal_range.low }} – {{ item.normal_range.high }}</td>
+                <td>
+                    <span class="status-chip status-{{ item.status | lower }}">
+                        {% if item.status == 'HIGH' %}↑{% elif item.status == 'LOW' %}↓{% else %}✓{% endif %}
+                        {{ item.status }}
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
     </table>
 </div>
 
-<div class="card">
-    <h2>🤖 AI Suggestions</h2>
-    <ul>
-        {% for s in result.agent_analysis %}
-        <li>{{ s }}</li>
-        {% endfor %}
-    </ul>
+<!-- TWO COLUMN: AI SUGGESTIONS + RAG -->
+<div class="two-col-grid">
+    <div>
+        <div class="section-header">
+            <span class="section-line"></span>
+            <h2 class="section-title">AI Agent Insights</h2>
+        </div>
+        <div class="suggestions-card">
+            {% for s in result.agent_analysis %}
+            <div class="suggestion-item">
+                <div class="suggestion-dot"></div>
+                <p>{{ s }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div>
+        <div class="section-header">
+            <span class="section-line"></span>
+            <h2 class="section-title">RAG Answer</h2>
+        </div>
+        <div class="rag-card">
+            <div class="rag-icon">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <circle cx="10" cy="10" r="3" stroke="currentColor" stroke-width="1.4"/>
+                    <path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.22 4.22l1.42 1.42M14.36 14.36l1.42 1.42M14.36 5.64L12.94 7.06M5.64 14.36l-1.42 1.42" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <p class="rag-text">{{ result.rag_response }}</p>
+        </div>
+    </div>
 </div>
 
-<div class="card">
-    <h2>💬 RAG Answer</h2>
-    <p>{{ result.rag_response }}</p>
+<div class="disclaimer-card">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.3"/>
+        <path d="M8 7v4M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    This is AI-generated output. Always consult a licensed medical professional before making health decisions.
 </div>
 
-<p class="warning">⚠️ This is AI-generated. Consult a doctor.</p>
 {% endif %}
 
 {% endblock %}

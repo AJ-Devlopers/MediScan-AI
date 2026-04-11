@@ -1,117 +1,223 @@
 {% extends "base.html" %}
 
+{% block nav_module1 %}active{% endblock %}
+{% block page_title %}Report Extractor{% endblock %}
+{% block page_subtitle %}Upload & analyze medical lab reports using AI{% endblock %}
+
 {% block content %}
 
-<!-- 📤 Upload -->
-<div class="card">
-    <h2>Upload Medical Report</h2>
-    <form action="/upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" required>
-        <button type="submit">Analyze</button>
-    </form>
+<!-- UPLOAD SECTION -->
+<div class="upload-zone-wrapper">
+    <div class="upload-zone" id="uploadZone">
+        <div class="upload-icon-ring">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                <path d="M14 18V8M14 8L10 12M14 8L18 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M5 20c0 1.7 1.3 3 3 3h12c1.7 0 3-1.3 3-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+        </div>
+        <h3 class="upload-title">Drop your medical report here</h3>
+        <p class="upload-sub">Supports PDF files · AI-powered extraction</p>
+        <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm">
+            <label class="upload-btn" for="fileInput">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M7 1v8M4 4l3-3 3 3M2 10v1.5A1.5 1.5 0 003.5 13h7A1.5 1.5 0 0012 11.5V10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Select PDF File
+            </label>
+            <input type="file" name="file" id="fileInput" accept=".pdf" required style="display:none;" onchange="handleFileSelect(this)">
+            <div id="fileDisplay" class="file-display" style="display:none;">
+                <span class="file-name-display" id="fileNameDisplay"></span>
+                <button type="submit" class="btn-primary" id="analyzeBtn">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.3"/>
+                        <path d="M4.5 7l2 2 3-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Analyze Report
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay" style="display:none;">
+    <div class="loading-card">
+        <div class="loading-pulse"></div>
+        <h3>Analyzing Report</h3>
+        <p>AI is processing your medical data…</p>
+        <div class="loading-steps">
+            <div class="step active" id="step1">Extracting values</div>
+            <div class="step" id="step2">Comparing ranges</div>
+            <div class="step" id="step3">Generating insights</div>
+        </div>
+    </div>
 </div>
 
 {% if result %}
 
-<!-- 📊 SUMMARY -->
-<div class="card summary-card">
-    <h2>Health Overview</h2>
+<!-- HEALTH SUMMARY -->
+<div class="section-header">
+    <span class="section-line"></span>
+    <h2 class="section-title">Health Overview</h2>
+</div>
 
-    <div class="summary-grid">
-        <div class="score-box">
-            <h1>{{ result.summary.score }}</h1>
-            <p>Health Score</p>
+<div class="summary-grid">
+    <div class="score-card">
+        <div class="score-ring">
+            <svg width="120" height="120" viewBox="0 0 120 120">
+                <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(20,210,160,0.1)" stroke-width="8"/>
+                <circle cx="60" cy="60" r="50" fill="none" stroke="#14d2a0" stroke-width="8"
+                    stroke-dasharray="314" stroke-dashoffset="{{ 314 - (result.summary.score / 100 * 314) }}"
+                    stroke-linecap="round" transform="rotate(-90 60 60)" class="score-circle"/>
+            </svg>
+            <div class="score-inner">
+                <span class="score-num">{{ result.summary.score }}</span>
+                <span class="score-label">/ 100</span>
+            </div>
         </div>
+        <p class="score-text">Health Score</p>
+    </div>
 
-        <div class="stat high">
-            <h3>{{ result.summary.high }}</h3>
-            <p>High</p>
+    <div class="stat-card high-card">
+        <div class="stat-icon">↑</div>
+        <div class="stat-num">{{ result.summary.high }}</div>
+        <div class="stat-name">High Values</div>
+        <div class="stat-bar"><div class="stat-fill" style="width:{{ [result.summary.high * 10, 100]|min }}%"></div></div>
+    </div>
+
+    <div class="stat-card low-card">
+        <div class="stat-icon">↓</div>
+        <div class="stat-num">{{ result.summary.low }}</div>
+        <div class="stat-name">Low Values</div>
+        <div class="stat-bar"><div class="stat-fill" style="width:{{ [result.summary.low * 10, 100]|min }}%"></div></div>
+    </div>
+
+    <div class="stat-card normal-card">
+        <div class="stat-icon">✓</div>
+        <div class="stat-num">{{ result.summary.normal }}</div>
+        <div class="stat-name">Normal Values</div>
+        <div class="stat-bar"><div class="stat-fill" style="width:{{ [result.summary.normal * 5, 100]|min }}%"></div></div>
+    </div>
+</div>
+
+<!-- PATIENT INFO -->
+<div class="section-header">
+    <span class="section-line"></span>
+    <h2 class="section-title">Patient Profile</h2>
+</div>
+
+<div class="patient-card">
+    <div class="patient-avatar">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <circle cx="14" cy="10" r="5" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M4 24c0-5.5 4.5-10 10-10s10 4.5 10 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+    </div>
+    <div class="patient-details">
+        <div class="patient-field">
+            <span class="pf-label">Full Name</span>
+            <span class="pf-value">{{ result.patient.name }}</span>
         </div>
-
-        <div class="stat low">
-            <h3>{{ result.summary.low }}</h3>
-            <p>Low</p>
+        <div class="patient-field">
+            <span class="pf-label">Age</span>
+            <span class="pf-value">{{ result.patient.age }}</span>
         </div>
-
-        <div class="stat normal">
-            <h3>{{ result.summary.normal }}</h3>
-            <p>Normal</p>
+        <div class="patient-field">
+            <span class="pf-label">Gender</span>
+            <span class="pf-value">{{ result.patient.gender }}</span>
+        </div>
+        <div class="patient-field">
+            <span class="pf-label">Laboratory</span>
+            <span class="pf-value">{{ result.patient.lab }}</span>
+        </div>
+        <div class="patient-field">
+            <span class="pf-label">Report Date</span>
+            <span class="pf-value">{{ result.patient.date }}</span>
+        </div>
+        <div class="patient-field">
+            <span class="pf-label">Referring Doctor</span>
+            <span class="pf-value">{{ result.patient.doctor }}</span>
         </div>
     </div>
 </div>
 
-<!-- 🧾 PATIENT -->
-<div class="card patient-card">
-    <h2>Patient Details</h2>
-
-    <div class="patient-grid">
-        <div><strong>Name:</strong> {{ result.patient.name }}</div>
-        <div><strong>Age:</strong> {{ result.patient.age }}</div>
-        <div><strong>Gender:</strong> {{ result.patient.gender }}</div>
-        <div><strong>Lab:</strong> {{ result.patient.lab }}</div>
-        <div><strong>Date:</strong> {{ result.patient.date }}</div>
-        <div><strong>Doctor:</strong> {{ result.patient.doctor }}</div>
-    </div>
-</div>
-
-<!-- 🧠 GROUPING -->
+<!-- GROUPED TEST RESULTS -->
 {% set categories = {} %}
-
 {% for item in result.data %}
     {% if item.category not in categories %}
         {% set _ = categories.update({item.category: {}}) %}
     {% endif %}
-
     {% if item.subcategory not in categories[item.category] %}
         {% set _ = categories[item.category].update({item.subcategory: []}) %}
     {% endif %}
-
     {% set _ = categories[item.category][item.subcategory].append(item) %}
 {% endfor %}
 
-<!-- 📊 DISPLAY -->
 {% for category, subcats in categories.items() %}
-<div class="card">
-    <h2>{{ category }}</h2>
+<div class="section-header">
+    <span class="section-line"></span>
+    <h2 class="section-title">{{ category }}</h2>
+</div>
 
+<div class="data-card">
     {% for subcat, tests in subcats.items() %}
-        <h3>{{ subcat }}</h3>
-
-        <table>
+    <div class="subcat-header">{{ subcat }}</div>
+    <table class="data-table">
+        <thead>
             <tr>
-                <th>Test</th>
+                <th>Test Name</th>
                 <th>Value</th>
-                <th>Range</th>
+                <th>Normal Range</th>
                 <th>Status</th>
             </tr>
-
+        </thead>
+        <tbody>
             {% for item in tests %}
-            <tr>
-                <td>{{ item.name }}</td>
-                <td>{{ item.value }}</td>
-                <td>
+            <tr class="table-row">
+                <td class="test-name">{{ item.name }}</td>
+                <td class="test-value mono">{{ item.value }}</td>
+                <td class="test-range mono">
                     {% if item.normal_range.low is not none %}
-                        {{ item.normal_range.low }} - {{ item.normal_range.high }}
+                        {{ item.normal_range.low }} – {{ item.normal_range.high }}
                     {% else %}
-                        -
+                        —
                     {% endif %}
                 </td>
-                <td class="status {{ item.status }}">{{ item.status }}</td>
+                <td>
+                    <span class="status-chip status-{{ item.status | lower }}">
+                        {% if item.status == 'HIGH' %}↑{% elif item.status == 'LOW' %}↓{% else %}✓{% endif %}
+                        {{ item.status }}
+                    </span>
+                </td>
             </tr>
             {% endfor %}
-        </table>
+        </tbody>
+    </table>
     {% endfor %}
 </div>
 {% endfor %}
 
-<!-- 💡 Suggestions -->
-<div class="card">
-    <h2>Suggestions</h2>
-    <ul>
-        {% for s in result.suggestions %}
-        <li>{{ s }}</li>
-        {% endfor %}
-    </ul>
+<!-- SUGGESTIONS -->
+<div class="section-header">
+    <span class="section-line"></span>
+    <h2 class="section-title">AI Recommendations</h2>
+</div>
+
+<div class="suggestions-card">
+    {% for s in result.suggestions %}
+    <div class="suggestion-item">
+        <div class="suggestion-dot"></div>
+        <p>{{ s }}</p>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="disclaimer-card">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.3"/>
+        <path d="M8 7v4M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    This analysis is AI-generated for informational purposes only. Always consult a qualified medical professional.
 </div>
 
 {% endif %}

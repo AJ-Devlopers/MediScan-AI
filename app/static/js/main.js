@@ -1,0 +1,266 @@
+/* ============================================================
+   MEDISCAN AI — main.js
+   All frontend interactivity — no backend logic changed
+   ============================================================ */
+
+/* ── File select handlers ── */
+
+function handleFileSelect(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const display = document.getElementById('fileDisplay');
+    const nameEl  = document.getElementById('fileNameDisplay');
+    if (display) display.style.display = 'flex';
+    if (nameEl)  nameEl.textContent = truncateFilename(file.name, 28);
+    highlightUploadZone();
+}
+
+function handleDashFile(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const display = document.getElementById('dashFileDisplay');
+    const nameEl  = document.getElementById('dashFileName');
+    if (display) display.style.display = 'flex';
+    if (nameEl)  nameEl.textContent = truncateFilename(file.name, 28);
+}
+
+function handleAgentFile(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const display = document.getElementById('agentFileDisplay');
+    const nameEl  = document.getElementById('agentFileName');
+    if (display) display.style.display = 'flex';
+    if (nameEl)  nameEl.textContent = truncateFilename(file.name, 28);
+}
+
+function truncateFilename(name, max) {
+    if (name.length <= max) return name;
+    const ext = name.split('.').pop();
+    return name.substring(0, max - ext.length - 4) + '….' + ext;
+}
+
+function highlightUploadZone() {
+    const zone = document.getElementById('uploadZone');
+    if (zone) {
+        zone.style.borderColor = 'rgba(20,210,160,0.6)';
+    }
+}
+
+/* ── Loading overlays ── */
+
+function showDashLoading() {
+    const el = document.getElementById('dashLoading');
+    if (el) el.style.display = 'flex';
+    animateLoadingSteps('dashLoading');
+}
+
+function showAgentLoading() {
+    const el = document.getElementById('agentLoading');
+    if (el) el.style.display = 'flex';
+    animateLoadingSteps('agentLoading');
+}
+
+function animateLoadingSteps(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const steps = container.querySelectorAll('.step');
+    let i = 0;
+    steps.forEach(s => s.classList.remove('active'));
+    if (steps[0]) steps[0].classList.add('active');
+
+    const interval = setInterval(() => {
+        i++;
+        if (i < steps.length) {
+            steps.forEach(s => s.classList.remove('active'));
+            steps[i].classList.add('active');
+        } else {
+            clearInterval(interval);
+        }
+    }, 2200);
+}
+
+/* Module 1 form — loading on submit */
+(function() {
+    const form = document.getElementById('uploadForm');
+    if (form) {
+        form.addEventListener('submit', function() {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) overlay.style.display = 'flex';
+            animateLoadingSteps('loadingOverlay');
+        });
+    }
+})();
+
+/* Agent form — loading on submit */
+(function() {
+    const form = document.getElementById('agentForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const fileInput = document.getElementById('agentFile');
+            if (!fileInput || !fileInput.files[0]) return;
+            showAgentLoading();
+        });
+    }
+})();
+
+/* ── Drag and drop on upload zone ── */
+
+(function() {
+    const zone = document.getElementById('uploadZone');
+    if (!zone) return;
+
+    ['dragenter', 'dragover'].forEach(ev => {
+        zone.addEventListener(ev, e => {
+            e.preventDefault();
+            zone.classList.add('dragging');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(ev => {
+        zone.addEventListener(ev, e => {
+            e.preventDefault();
+            zone.classList.remove('dragging');
+        });
+    });
+
+    zone.addEventListener('drop', e => {
+        const file = e.dataTransfer.files[0];
+        if (!file || !file.name.endsWith('.pdf')) return;
+
+        const input = document.getElementById('fileInput');
+        if (!input) return;
+
+        // Transfer file to input
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        handleFileSelect(input);
+    });
+})();
+
+/* ── RAG Chat (Module 2) ── */
+
+function showMessage(text, role) {
+    const container = document.getElementById('chatMessages');
+    const emptyEl   = document.getElementById('chatEmpty');
+
+    if (emptyEl) emptyEl.style.display = 'none';
+    if (!container) return;
+
+    const bubble = document.createElement('div');
+    bubble.className = `chat-bubble ${role}`;
+    bubble.textContent = text;
+    bubble.style.animation = 'fadeUp 0.3s ease both';
+    container.appendChild(bubble);
+
+    // Scroll to bottom
+    const chatBox = document.getElementById('chatContainer');
+    if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function showTypingIndicator() {
+    const container = document.getElementById('chatMessages');
+    if (!container) return null;
+
+    const emptyEl = document.getElementById('chatEmpty');
+    if (emptyEl) emptyEl.style.display = 'none';
+
+    const indicator = document.createElement('div');
+    indicator.className = 'chat-bubble ai';
+    indicator.id = 'typingIndicator';
+    indicator.innerHTML = '<span style="opacity:0.5; font-family: var(--font-mono); font-size:12px; letter-spacing:0.1em">analyzing ···</span>';
+    container.appendChild(indicator);
+
+    const chatBox = document.getElementById('chatContainer');
+    if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+
+    return indicator;
+}
+
+async function submitRagQuery(event) {
+    event.preventDefault();
+    const input  = document.getElementById('ragQuestion');
+    const btn    = document.getElementById('ragSubmit');
+    const question = (input?.value || '').trim();
+    if (!question) return;
+
+    // Show user message
+    showMessage(question, 'user');
+    if (input) input.value = '';
+
+    // Disable button
+    if (btn) { btn.disabled = true; btn.textContent = 'Thinking…'; }
+
+    const typingEl = showTypingIndicator();
+
+    try {
+        const formData = new FormData();
+        formData.append('question', question);
+
+        const response = await fetch('/module2/ask', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (typingEl) typingEl.remove();
+
+        if (response.ok) {
+            const data = await response.json();
+            showMessage(data.answer || data.rag_response || 'No answer returned.', 'ai');
+        } else {
+            showMessage('Error reaching the knowledge base. Please try again.', 'ai');
+        }
+    } catch (err) {
+        if (typingEl) typingEl.remove();
+        showMessage('Connection error. Please check your network and try again.', 'ai');
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8l12-6-5 6 5 6-12-6Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg> Ask`; }
+    }
+}
+
+/* ── Score circle animation on page load ── */
+
+(function() {
+    const circle = document.querySelector('.score-circle');
+    if (!circle) return;
+
+    const total = 314;
+    const offset = parseFloat(circle.getAttribute('stroke-dashoffset') || total);
+
+    circle.style.strokeDashoffset = total;
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            circle.style.transition = 'stroke-dashoffset 1.4s cubic-bezier(0.4, 0, 0.2, 1)';
+            circle.style.strokeDashoffset = offset;
+        }, 200);
+    });
+})();
+
+/* ── Staggered row animation on data tables ── */
+
+(function() {
+    const rows = document.querySelectorAll('.table-row');
+    rows.forEach((row, i) => {
+        row.style.opacity = '0';
+        row.style.transform = 'translateY(6px)';
+        setTimeout(() => {
+            row.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            row.style.opacity = '1';
+            row.style.transform = 'translateY(0)';
+        }, 80 + i * 30);
+    });
+})();
+
+/* ── Topbar breadcrumb active nav highlight ── */
+
+(function() {
+    const path = window.location.pathname;
+    document.querySelectorAll('.nav-item').forEach(item => {
+        const href = item.getAttribute('href');
+        if (href && href !== '#') {
+            if (path === href || (href !== '/' && path.startsWith(href))) {
+                item.classList.add('active');
+            }
+        }
+    });
+})();

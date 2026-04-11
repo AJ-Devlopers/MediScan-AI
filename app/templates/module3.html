@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block nav_module3 %}active{% endblock %}
+{% block page_title %}AI Agents{% endblock %}
+{% block page_subtitle %}Multi-agent pipeline — warnings, comparisons & suggestions{% endblock %}
+
+{% block content %}
+
+<div class="upload-zone-wrapper">
+    <div class="upload-zone">
+        <div class="upload-icon-ring">
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                <circle cx="14" cy="10" r="4" stroke="currentColor" stroke-width="1.5"/>
+                <circle cx="6" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/>
+                <circle cx="22" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M10 13l-2 4M18 13l2 4M10 13h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+        </div>
+        <h3 class="upload-title">Upload Report for Agent Analysis</h3>
+        <p class="upload-sub">Three AI agents will analyze: Warning Detection · Comparison · Suggestions</p>
+        <form action="/module3/analyze" method="post" enctype="multipart/form-data" id="agentForm">
+            <label class="upload-btn" for="agentFile">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M7 1v8M4 4l3-3 3 3M2 10v1.5A1.5 1.5 0 003.5 13h7A1.5 1.5 0 0012 11.5V10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Select PDF
+            </label>
+            <input type="file" name="file" id="agentFile" accept=".pdf" required style="display:none;" onchange="handleAgentFile(this)">
+            <div id="agentFileDisplay" style="display:none; margin-top:12px;">
+                <span class="file-name-display" id="agentFileName"></span>
+                <button type="submit" class="btn-primary" onclick="showAgentLoading()">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <path d="M7 1l1.5 4 4.3.4L9.6 8l.8 4.2L7 10l-3.4 2.2.8-4.2L2.2 5.4l4.3-.4L7 1Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+                    </svg>
+                    Run Agents
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="loading-overlay" id="agentLoading" style="display:none;">
+    <div class="loading-card">
+        <div class="loading-pulse"></div>
+        <h3>Agents Running</h3>
+        <p>Multi-agent pipeline processing your report…</p>
+        <div class="loading-steps">
+            <div class="step active">Warning Agent — scanning anomalies</div>
+            <div class="step">Comparator Agent — benchmarking</div>
+            <div class="step">Suggestion Agent — recommendations</div>
+        </div>
+    </div>
+</div>
+
+{% if result %}
+
+<!-- AGENT PIPELINE VISUAL -->
+<div class="section-header">
+    <span class="section-line"></span>
+    <h2 class="section-title">Agent Pipeline Results</h2>
+</div>
+
+<div class="agent-pipeline">
+    <div class="agent-node">
+        <div class="agent-icon warning-agent">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M10 2L18.66 17H1.34L10 2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                <path d="M10 8v4M10 13.5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+        </div>
+        <span class="agent-name">Warning Agent</span>
+        <span class="agent-status-dot active"></span>
+    </div>
+    <div class="agent-connector"></div>
+    <div class="agent-node">
+        <div class="agent-icon compare-agent">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M4 10h12M10 4l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+        <span class="agent-name">Comparator</span>
+        <span class="agent-status-dot active"></span>
+    </div>
+    <div class="agent-connector"></div>
+    <div class="agent-node">
+        <div class="agent-icon suggest-agent">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M10 6v5l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+        </div>
+        <span class="agent-name">Suggestion Agent</span>
+        <span class="agent-status-dot active"></span>
+    </div>
+</div>
+
+<!-- WARNINGS -->
+{% if result.warnings %}
+<div class="section-header">
+    <span class="section-line"></span>
+    <h2 class="section-title">Warnings Detected</h2>
+</div>
+<div class="warnings-grid">
+    {% for w in result.warnings %}
+    <div class="warning-item">
+        <div class="warning-icon">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 1.5L14.93 14H1.07L8 1.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                <path d="M8 6.5v3M8 11v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+        </div>
+        <p>{{ w }}</p>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- COMPARISON -->
+{% if result.comparison %}
+<div class="section-header">
+    <span class="section-line"></span>
+    <h2 class="section-title">Comparative Analysis</h2>
+</div>
+<div class="suggestions-card">
+    {% for c in result.comparison %}
+    <div class="suggestion-item">
+        <div class="suggestion-dot" style="background: #7b8fff;"></div>
+        <p>{{ c }}</p>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- SUGGESTIONS -->
+{% if result.suggestions %}
+<div class="section-header">
+    <span class="section-line"></span>
+    <h2 class="section-title">Agent Recommendations</h2>
+</div>
+<div class="suggestions-card">
+    {% for s in result.suggestions %}
+    <div class="suggestion-item">
+        <div class="suggestion-dot"></div>
+        <p>{{ s }}</p>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="disclaimer-card">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.3"/>
+        <path d="M8 7v4M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    AI agent outputs are for research and informational use only. Not a substitute for clinical diagnosis.
+</div>
+
+{% endif %}
+
+{% endblock %}
