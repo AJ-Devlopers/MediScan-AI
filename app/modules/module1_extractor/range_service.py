@@ -21,7 +21,7 @@ def load_local_ranges():
         return {}
 
 
-# 🔧 Normalize test name (IMPROVED 🔥)
+# 🔧 Normalize test name
 def normalize_name(name):
     name = name.lower()
 
@@ -37,12 +37,31 @@ def normalize_name(name):
     for w in words_to_remove:
         name = name.replace(w, "")
 
-    name = name.strip()
-
-    return name
+    return name.strip()
 
 
-# 🤖 AI fallback (same)
+# 🔥 Helper function (NEW)
+def extract_range(data):
+    # list / tuple case
+    if isinstance(data, (list, tuple)):
+        low = data[0] if len(data) > 0 else None
+        high = data[1] if len(data) > 1 else None
+        unit = data[2] if len(data) > 2 else None
+        return {"low": low, "high": high, "unit": unit}
+
+    # dict case
+    if isinstance(data, dict):
+        return {
+            "low": data.get("low"),
+            "high": data.get("high"),
+            "unit": data.get("unit")
+        }
+
+    # fallback
+    return {"low": None, "high": None, "unit": None}
+
+
+# 🤖 AI fallback
 def get_range_from_ai(test_name):
     prompt = f"""
 Give normal range for {test_name} in adults.
@@ -65,15 +84,19 @@ Return ONLY JSON:
 
         match = re.search(r"\{.*\}", content, re.DOTALL)
         if match:
-            return json.loads(match.group())
+            data = json.loads(match.group())
+
+            # ensure unit exists
+            data["unit"] = None
+            return data
 
     except:
         pass
 
-    return {"low": None, "high": None}
+    return {"low": None, "high": None, "unit": None}
 
 
-# 🧠 HYBRID FUNCTION (IMPROVED 🔥🔥)
+# 🧠 HYBRID FUNCTION
 def get_normal_range(test_name):
     normalized = normalize_name(test_name)
 
@@ -85,31 +108,28 @@ def get_normal_range(test_name):
 
     # 🔥 1. EXACT MATCH
     if normalized in ranges:
-        low, high = ranges[normalized]
-        result = {"low": low, "high": high}
+        result = extract_range(ranges[normalized])
         cache[normalized] = result
         return result
 
-    # 🔥 2. KEYWORD MATCH (BOTH DIRECTIONS)
+    # 🔥 2. KEYWORD MATCH
     for key in ranges:
         if key in normalized or normalized in key:
-            low, high = ranges[key]
-            result = {"low": low, "high": high}
+            result = extract_range(ranges[key])
             cache[normalized] = result
             return result
 
-    # 🔥 3. TOKEN MATCH (VERY POWERFUL)
+    # 🔥 3. TOKEN MATCH
     words = normalized.split()
 
     for key in ranges:
         for w in words:
             if w in key:
-                low, high = ranges[key]
-                result = {"low": low, "high": high}
+                result = extract_range(ranges[key])
                 cache[normalized] = result
                 return result
 
-    # 🤖 4. AI FALLBACK (ONLY IF IMPORTANT)
+    # 🤖 4. AI FALLBACK
     ai_result = get_range_from_ai(normalized)
 
     cache[normalized] = ai_result

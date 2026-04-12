@@ -14,17 +14,18 @@ def compare_values(data):
         except:
             value = None
 
+        # 🔥 GET RANGE
         range_data = get_normal_range(name)
 
         low = range_data.get("low")
         high = range_data.get("high")
+        unit = range_data.get("unit")   # ✅ NEW (optional but useful)
 
-        # 🔥 FIX 4: BETTER STATUS HANDLING
+        # 🔥 STATUS LOGIC
         if value is None:
             status = "UNKNOWN"
 
         elif low is None or high is None:
-            # range not found → don't break system
             status = "UNKNOWN"
 
         else:
@@ -38,11 +39,16 @@ def compare_values(data):
             except:
                 status = "UNKNOWN"
 
+        # 🔥 FINAL OUTPUT
         results.append({
             **item,
             "value": value,
             "status": status,
-            "normal_range": range_data
+            "normal_range": {
+                "low": low,
+                "high": high,
+                "unit": unit   # ✅ included in response
+            }
         })
 
     return results
