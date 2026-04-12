@@ -5,11 +5,10 @@ from .suggestion_service import generate_suggestions
 from .categorizer_ai import categorize_test
 from .patient_extractor import extract_patient_details
 
-
-def run_module1_pipeline(file_path):
+def run_module1_pipeline(file_bytes):
 
     # 🧾 Extract text
-    text = extract_text(file_path)
+    text = extract_text(file_bytes)
 
     # 🧠 Patient details
     patient = extract_patient_details(text)

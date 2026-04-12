@@ -21,12 +21,9 @@ def home(request: Request):
 
 @router.post("/upload", response_class=HTMLResponse)
 async def upload_file(request: Request, file: UploadFile = File(...)):
-    file_path = f"uploads/{file.filename}"
+    contents = await file.read()   # read file in memory
 
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
-    result = run_module1_pipeline(file_path)
+    result = run_module1_pipeline(contents)
 
     return templates.TemplateResponse(
         request=request,

@@ -1,8 +1,9 @@
-import fitz  # PyMuPDF
+import fitz
 
-def extract_text(file_path):
+def extract_text(file_bytes):
     text = ""
-    doc = fitz.open(file_path)
+
+    doc = fitz.open(stream=file_bytes, filetype="pdf")
 
     for page in doc:
         text += page.get_text()
