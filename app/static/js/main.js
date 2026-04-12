@@ -3,6 +3,35 @@
    All frontend interactivity — no backend logic changed
    ============================================================ */
 
+/* ── THEME TOGGLE ── */
+
+(function initTheme() {
+    // Read saved preference; default to dark
+    const saved = localStorage.getItem('mediscan-theme') || 'dark';
+    applyTheme(saved, false);
+})();
+
+function applyTheme(theme, animate) {
+    const html  = document.documentElement;
+    const label = document.getElementById('themeLabel');
+
+    if (animate) {
+        // Smooth cross-fade on body
+        document.body.style.transition = 'background 0.35s ease, color 0.35s ease';
+        setTimeout(() => { document.body.style.transition = ''; }, 400);
+    }
+
+    html.setAttribute('data-theme', theme);
+    localStorage.setItem('mediscan-theme', theme);
+
+    if (label) label.textContent = theme === 'dark' ? 'Light' : 'Dark';
+}
+
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'dark';
+    applyTheme(current === 'dark' ? 'light' : 'dark', true);
+}
+
 /* ── File select handlers ── */
 
 function handleFileSelect(input) {
@@ -41,9 +70,7 @@ function truncateFilename(name, max) {
 
 function highlightUploadZone() {
     const zone = document.getElementById('uploadZone');
-    if (zone) {
-        zone.style.borderColor = 'rgba(20,210,160,0.6)';
-    }
+    if (zone) zone.style.borderColor = 'rgba(79,142,247,0.6)';
 }
 
 /* ── Loading overlays ── */
@@ -95,7 +122,7 @@ function animateLoadingSteps(containerId) {
 (function() {
     const form = document.getElementById('agentForm');
     if (form) {
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', function() {
             const fileInput = document.getElementById('agentFile');
             if (!fileInput || !fileInput.files[0]) return;
             showAgentLoading();
@@ -126,11 +153,8 @@ function animateLoadingSteps(containerId) {
     zone.addEventListener('drop', e => {
         const file = e.dataTransfer.files[0];
         if (!file || !file.name.endsWith('.pdf')) return;
-
         const input = document.getElementById('fileInput');
         if (!input) return;
-
-        // Transfer file to input
         const dt = new DataTransfer();
         dt.items.add(file);
         input.files = dt.files;
@@ -143,7 +167,6 @@ function animateLoadingSteps(containerId) {
 function showMessage(text, role) {
     const container = document.getElementById('chatMessages');
     const emptyEl   = document.getElementById('chatEmpty');
-
     if (emptyEl) emptyEl.style.display = 'none';
     if (!container) return;
 
@@ -153,7 +176,6 @@ function showMessage(text, role) {
     bubble.style.animation = 'fadeUp 0.3s ease both';
     container.appendChild(bubble);
 
-    // Scroll to bottom
     const chatBox = document.getElementById('chatContainer');
     if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
 }
@@ -161,7 +183,6 @@ function showMessage(text, role) {
 function showTypingIndicator() {
     const container = document.getElementById('chatMessages');
     if (!container) return null;
-
     const emptyEl = document.getElementById('chatEmpty');
     if (emptyEl) emptyEl.style.display = 'none';
 
@@ -173,22 +194,18 @@ function showTypingIndicator() {
 
     const chatBox = document.getElementById('chatContainer');
     if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
-
     return indicator;
 }
 
 async function submitRagQuery(event) {
     event.preventDefault();
-    const input  = document.getElementById('ragQuestion');
-    const btn    = document.getElementById('ragSubmit');
+    const input    = document.getElementById('ragQuestion');
+    const btn      = document.getElementById('ragSubmit');
     const question = (input?.value || '').trim();
     if (!question) return;
 
-    // Show user message
     showMessage(question, 'user');
     if (input) input.value = '';
-
-    // Disable button
     if (btn) { btn.disabled = true; btn.textContent = 'Thinking…'; }
 
     const typingEl = showTypingIndicator();
@@ -197,11 +214,7 @@ async function submitRagQuery(event) {
         const formData = new FormData();
         formData.append('question', question);
 
-        const response = await fetch('/module2/ask', {
-            method: 'POST',
-            body: formData
-        });
-
+        const response = await fetch('/module2/ask', { method: 'POST', body: formData });
         if (typingEl) typingEl.remove();
 
         if (response.ok) {
@@ -214,7 +227,10 @@ async function submitRagQuery(event) {
         if (typingEl) typingEl.remove();
         showMessage('Connection error. Please check your network and try again.', 'ai');
     } finally {
-        if (btn) { btn.disabled = false; btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8l12-6-5 6 5 6-12-6Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg> Ask`; }
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8l12-6-5 6 5 6-12-6Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg> Ask`;
+        }
     }
 }
 
@@ -223,10 +239,8 @@ async function submitRagQuery(event) {
 (function() {
     const circle = document.querySelector('.score-circle');
     if (!circle) return;
-
-    const total = 314;
+    const total  = 314;
     const offset = parseFloat(circle.getAttribute('stroke-dashoffset') || total);
-
     circle.style.strokeDashoffset = total;
     requestAnimationFrame(() => {
         setTimeout(() => {
@@ -239,8 +253,7 @@ async function submitRagQuery(event) {
 /* ── Staggered row animation on data tables ── */
 
 (function() {
-    const rows = document.querySelectorAll('.table-row');
-    rows.forEach((row, i) => {
+    document.querySelectorAll('.table-row').forEach((row, i) => {
         row.style.opacity = '0';
         row.style.transform = 'translateY(6px)';
         setTimeout(() => {
@@ -251,7 +264,7 @@ async function submitRagQuery(event) {
     });
 })();
 
-/* ── Topbar breadcrumb active nav highlight ── */
+/* ── Active nav highlight ── */
 
 (function() {
     const path = window.location.pathname;
