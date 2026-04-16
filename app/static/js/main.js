@@ -6,7 +6,6 @@
 /* ── THEME TOGGLE ── */
 
 (function initTheme() {
-    // Read saved preference; default to dark
     const saved = localStorage.getItem('mediscan-theme') || 'dark';
     applyTheme(saved, false);
 })();
@@ -16,7 +15,6 @@ function applyTheme(theme, animate) {
     const label = document.getElementById('themeLabel');
 
     if (animate) {
-        // Smooth cross-fade on body
         document.body.style.transition = 'background 0.35s ease, color 0.35s ease';
         setTimeout(() => { document.body.style.transition = ''; }, 400);
     }
@@ -164,15 +162,116 @@ function animateLoadingSteps(containerId) {
 
 /* ── RAG Chat (Module 2) ── */
 
+/* ── 🛡️ HTML Escape (prevents XSS in code blocks) ── */
+function escapeHtml(text) {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+/* ── 📋 Copy Code Button ── */
+function copyCode(btn) {
+    const code = btn.closest('.code-block').querySelector('code').innerText;
+    navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = 'Copy', 2000);
+    });
+}
+
+/* ── 🔧 Markdown / Response Formatter ── */
+function formatResponse(text) {
+    if (!text) return '';
+
+    let html = text
+        // ── Code blocks (``` lang ... ```) ──────────────────
+        .replace(/```(\w+)?\n?([\s\S]*?)```/g, (_, lang, code) => {
+            const language = lang || 'plaintext';
+            return `
+                <div class="code-block">
+                    <div class="code-header">
+                        <span class="code-lang">${language}</span>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <pre><code class="language-${language}">${escapeHtml(code.trim())}</code></pre>
+                </div>`;
+        })
+
+        // ── Inline code (`code`) ─────────────────────────────
+        .replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>')
+
+        // ── Headings ## / ### ────────────────────────────────
+        .replace(/^### (.+)$/gm, '<h3 class="md-h3">$1</h3>')
+        .replace(/^## (.+)$/gm,  '<h2 class="md-h2">$1</h2>')
+        .replace(/^# (.+)$/gm,   '<h1 class="md-h1">$1</h1>')
+
+        // ── Bold + Italic ***text*** ──────────────────────────
+        .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+
+        // ── Bold **text** ────────────────────────────────────
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+
+        // ── Italic *text* ────────────────────────────────────
+        .replace(/\*([^*\n]+)\*/g, '<em>$1</em>')
+
+        // ── Strikethrough ~~text~~ ───────────────────────────
+        .replace(/~~(.+?)~~/g, '<del>$1</del>')
+
+        // ── Horizontal rule --- ──────────────────────────────
+        .replace(/^---$/gm, '<hr class="md-hr">')
+
+        // ── Unordered lists (-, *, •) ────────────────────────
+        .replace(/^[\-\*•] (.+)$/gm, '<li class="md-li">$1</li>')
+
+        // ── Ordered lists (1. 2. 3.) ─────────────────────────
+        .replace(/^\d+\. (.+)$/gm, '<li class="md-oli">$1</li>')
+
+        // ── Blockquote > text ────────────────────────────────
+        .replace(/^> (.+)$/gm, '<blockquote class="md-blockquote">$1</blockquote>')
+
+        // ── Wrap consecutive <li> into <ul> ──────────────────
+        .replace(/(<li class="md-li">.*?<\/li>(\n|$))+/g, match =>
+            `<ul class="md-ul">${match}</ul>`)
+
+        // ── Wrap consecutive <li class="md-oli"> into <ol> ───
+        .replace(/(<li class="md-oli">.*?<\/li>(\n|$))+/g, match =>
+            `<ol class="md-ol">${match}</ol>`)
+
+        // ── Line breaks ──────────────────────────────────────
+        .replace(/\n\n+/g, '</p><p class="md-p">')
+        .replace(/\n/g, '<br>');
+
+    // Wrap in paragraph if not already block-level
+    if (!html.startsWith('<h') && !html.startsWith('<ul') &&
+        !html.startsWith('<ol') && !html.startsWith('<blockquote') &&
+        !html.startsWith('<div') && !html.startsWith('<hr')) {
+        html = `<p class="md-p">${html}</p>`;
+    }
+
+    return html;
+}
+
+/* ── 💬 Show Message ── */
 function showMessage(text, role) {
     const container = document.getElementById('chatMessages');
     const emptyEl   = document.getElementById('chatEmpty');
+
     if (emptyEl) emptyEl.style.display = 'none';
     if (!container) return;
 
     const bubble = document.createElement('div');
     bubble.className = `chat-bubble ${role}`;
-    bubble.textContent = text;
+
+    if (role === 'assistant' || role === 'ai') {
+        // Render formatted markdown for AI responses
+        bubble.innerHTML = formatResponse(text);
+    } else {
+        // Plain escaped text for user messages
+        bubble.textContent = text;
+    }
+
     bubble.style.animation = 'fadeUp 0.3s ease both';
     container.appendChild(bubble);
 
@@ -183,30 +282,45 @@ function showMessage(text, role) {
 function showTypingIndicator() {
     const container = document.getElementById('chatMessages');
     if (!container) return null;
+
     const emptyEl = document.getElementById('chatEmpty');
     if (emptyEl) emptyEl.style.display = 'none';
 
     const indicator = document.createElement('div');
     indicator.className = 'chat-bubble ai';
     indicator.id = 'typingIndicator';
-    indicator.innerHTML = '<span style="opacity:0.5; font-family: var(--font-mono); font-size:12px; letter-spacing:0.1em">analyzing ···</span>';
+
+    indicator.innerHTML = `
+        <span style="opacity:0.6; font-family: var(--font-mono); font-size:12px;">
+            analyzing ···
+        </span>
+    `;
+
     container.appendChild(indicator);
 
     const chatBox = document.getElementById('chatContainer');
     if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+
     return indicator;
 }
 
 async function submitRagQuery(event) {
     event.preventDefault();
+
     const input    = document.getElementById('ragQuestion');
     const btn      = document.getElementById('ragSubmit');
+
     const question = (input?.value || '').trim();
     if (!question) return;
 
     showMessage(question, 'user');
+
     if (input) input.value = '';
-    if (btn) { btn.disabled = true; btn.textContent = 'Thinking…'; }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '⏳ Thinking...';
+    }
 
     const typingEl = showTypingIndicator();
 
@@ -214,22 +328,35 @@ async function submitRagQuery(event) {
         const formData = new FormData();
         formData.append('question', question);
 
-        const response = await fetch('/module2/ask', { method: 'POST', body: formData });
+        const response = await fetch('/module2/ask', {
+            method: 'POST',
+            body: formData
+        });
+
         if (typingEl) typingEl.remove();
 
         if (response.ok) {
             const data = await response.json();
-            showMessage(data.answer || data.rag_response || 'No answer returned.', 'ai');
+            showMessage(
+                data.answer || data.rag_response || "No answer returned.",
+                'ai'
+            );
         } else {
-            showMessage('Error reaching the knowledge base. Please try again.', 'ai');
+            showMessage("⚠️ Server error. Try again.", 'ai');
         }
+
     } catch (err) {
         if (typingEl) typingEl.remove();
-        showMessage('Connection error. Please check your network and try again.', 'ai');
+        showMessage("⚠️ Connection error. Please try again.", 'ai');
     } finally {
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8l12-6-5 6 5 6-12-6Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg> Ask`;
+            btn.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M2 8l12-6-5 6 5 6-12-6Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                </svg>
+                Ask
+            `;
         }
     }
 }
