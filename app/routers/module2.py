@@ -19,13 +19,24 @@ class AskRequest(BaseModel):
 # ── GET — Render Page ──────────────────────────────────────
 @router.get("/")
 def module2_page(request: Request):
+
+    # 🔥 GET ONLY STORED DATA
+    report_summary = request.session.get("report_summary")
+    patient = request.session.get("patient")
+
+    # 🧪 DEBUG
+    print("SESSION DATA:", request.session)
+
     return templates.TemplateResponse(
         request=request,
         name="module2.html",
-        context={"request": request}
+        context={
+            "request": request,
+            "report_summary": report_summary or {},
+            "patient": patient or {}
+        }
     )
-
-
+    
 # ── POST — Answer Question with History ───────────────────
 @router.post("/ask")
 async def ask_question(body: AskRequest):

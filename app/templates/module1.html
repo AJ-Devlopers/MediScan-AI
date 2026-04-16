@@ -177,14 +177,7 @@
                 <td class="test-name">{{ item.name }}</td>
                 <td class="test-value mono">{{ item.value }} {{ item.normal_range.unit or "" }}</td>
                 <td class="test-range mono">
-                    {% if item.normal_range.low is not none %}
-                        {{ item.normal_range.low }} – {{ item.normal_range.high }}
-                        {% if item.normal_range.unit %}
-                            {{ item.normal_range.unit }}
-                        {% endif %}
-                    {% else %}
-                        —
-                    {% endif %}
+                    {{ item.normal_range.display or "—" }}
                 </td>
                 <td>
                     <span class="status-chip status-{{ item.status | lower }}">

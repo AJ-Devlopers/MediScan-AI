@@ -35,15 +35,24 @@ Format:
   {{
     "name": "<test name>",
     "value": <number>,
-    "unit": "<unit>"
+    "unit": "<unit exactly as written>"
   }}
 ]
 
+
 Rules:
-- Extract ALL tests
-- Only numeric values
-- No explanation
-- Output only JSON
+- Extract EVERY test parameter
+- Value must be numeric only (no text like 'mg/dL' inside value)
+- Unit must be EXACT (e.g., mg/dL, g/dL, U/L, %, mmol/L)
+- If unit is missing, return null
+- Do NOT guess units
+- Do NOT include reference ranges
+- Do NOT include text explanations
+- Output ONLY JSON (no extra text)
+
+Examples:
+"Glucose 90 mg/dL" → value: 90, unit: "mg/dL"
+"HbA1c 5.6%" → value: 5.6, unit: "%
 
 Report:
 {text}

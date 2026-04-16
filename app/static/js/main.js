@@ -384,3 +384,17 @@ async function submitRagQuery(event) {
         }
     });
 })();
+
+// 🔥 GLOBAL RESET FUNCTION
+function startNewSession() {
+    if (typeof chatHistory !== "undefined") {
+        chatHistory.length = 0;
+    }
+
+    const chatBox = document.getElementById("chatMessages");
+    if (chatBox) {
+        chatBox.innerHTML = "";
+    }
+
+    window.location.href = "/";
+}

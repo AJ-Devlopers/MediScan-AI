@@ -499,6 +499,38 @@ ul { list-style: none; }
 
 .theme-toggle:active { transform: translateY(0); }
 
+/* ── NEW REPORT BUTTON ── */
+.reset-btn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+    backdrop-filter: blur(8px);
+    letter-spacing: 0.02em;
+}
+
+.reset-btn:hover {
+    border-color: var(--border-h);
+    color: var(--accent);
+    background: var(--accent-dim);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px var(--accent-glow);
+}
+
+.reset-btn:active {
+    transform: translateY(0);
+}
+
+
 /* Show moon in dark, sun in light */
 [data-theme="dark"]  .icon-sun  { display: none; }
 [data-theme="dark"]  .icon-moon { display: block; }
@@ -1643,10 +1675,12 @@ ul { list-style: none; }
 }
 
 /* User */
+/* User */
 .chat-bubble.user {
     margin-left: auto;
-    background: var(--btn-gradient);
-    color: white;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid var(--upload-border);
     border-bottom-right-radius: 4px;
 }
 
@@ -1802,3 +1836,4 @@ ul { list-style: none; }
     from { opacity: 0; transform: translateY(10px); }
     to   { opacity: 1; transform: translateY(0); }
 }
+
