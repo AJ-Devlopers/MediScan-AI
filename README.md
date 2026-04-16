@@ -10,7 +10,7 @@
 
 ---
 
-## What It Does
+## About the project
 
 MediScan AI takes a patient's PDF lab report and runs it through three independent AI modules, each building on the last:
 
