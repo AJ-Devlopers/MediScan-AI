@@ -1,8 +1,6 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-
-from starlette.middleware.sessions import SessionMiddleware  # ✅ ADD THIS
+from starlette.middleware.sessions import SessionMiddleware
 
 from app.routers import module1, module2
 from app.modules.module2_rag.knowledge_loader import load_knowledge_base
@@ -10,38 +8,31 @@ from app.modules.module2_rag.knowledge_loader import load_knowledge_base
 import os
 from dotenv import load_dotenv
 
-
-# ✅ Load env variables
 load_dotenv()
 
 app = FastAPI(title="MediScan AI")
 
-
 # 🔐 Secret key (safe fallback)
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
 
-
-# ✅ Session middleware
+# 🧠 Session Middleware
 app.add_middleware(
     SessionMiddleware,
-    secret_key=SECRET_KEY
+    secret_key=SECRET_KEY,
+    max_age=7200,
+    same_site="lax",
+    https_only=False,
+    session_cookie="mediscan_session",
 )
 
-
-# ✅ Load knowledge base at startup (BEST PRACTICE)
+# 🚀 Load knowledge base on startup
 @app.on_event("startup")
 def startup_event():
     load_knowledge_base()
 
-
-# ✅ Routers
+# 🔗 Routers
 app.include_router(module1.router)
 app.include_router(module2.router, prefix="/module2")
 
-
-# ✅ Static files
+# 📁 Static files
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
-
-
-# ✅ Templates
-templates = Jinja2Templates(directory="app/templates")

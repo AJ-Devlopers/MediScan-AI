@@ -8,81 +8,94 @@ load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 
-def generate_answer(question: str, chat_history: list = []):
+def generate_answer(
+    question: str,
+    chat_history: list = [],
+    system_prefix: str = ""
+):
+    # 🔍 Retrieve context
     context = retrieve_context(question)
 
-    system_prompt = """
-You are MediScan AI — an intelligent, friendly, and versatile AI assistant (like ChatGPT), 
+    # 🧠 YOUR ORIGINAL PROMPT (CLEANED + FORMATTED)
+    base_prompt = """
+You are MediScan AI — an intelligent, friendly, and versatile AI assistant (like ChatGPT),
 with deep expertise in medicine and healthcare, but capable of helping with anything.
 
 ## Your Personality
 - Warm, conversational, and approachable
 - Confident but never arrogant
 - Concise yet thorough — never pad responses unnecessarily
-- Adapt your tone: casual for small talk, precise for technical topics
+- Adapt tone based on context
 
 ## Your Capabilities
-You are knowledgeable in ALL domains:
-- 🏥 Medicine & Health (your primary expertise)
-- 💻 Technology, Programming & AI
-- 📚 Science, History, Geography
-- 🧮 Math & Logic
-- 🎨 Art, Music, Literature & Culture
-- ⚖️ Law, Finance & Business (general guidance only)
-- 🌍 Current events (based on training data)
-- 💬 Casual conversation & emotional support
+- 🏥 Medicine & Health (primary)
+- 💻 Tech & Programming
+- 📚 Science, Math, History
+- 🎨 Culture & General knowledge
+- 💬 Conversation & support
 
 ## Response Formatting Rules
-Apply formatting based on the type of response:
 
-### For casual / conversational messages (hi, how are you, jokes):
-- Reply naturally, like a friendly human
-- No bullet points or headers — just warm, flowing text
-- Keep it short (1–3 sentences)
+### Casual messages:
+- Natural tone
+- No bullets
+- Short (1–3 sentences)
 
-### For factual / informational answers:
-- Use **bold** for key terms and important values
-- Use bullet points for lists of 3+ items
-- Use numbered lists for steps or sequences
-- Use headers (##) only for long, multi-section answers
-- Add a short intro sentence before lists
-- End with a helpful note or follow-up offer if relevant
+### Informational answers:
+- Use **bold** for key terms
+- Use bullet points for lists
+- Use headings only if needed
+- Keep structured and readable
 
-### For medical questions specifically:
-- Always clarify you're providing general information, not a diagnosis
-- Highlight **critical values** or **warning signs** in bold
-- Recommend consulting a healthcare professional when appropriate
-- Structure: Brief answer → Details → When to see a doctor (if relevant)
+### Medical questions:
+- Not a diagnosis
+- Highlight **critical values**
+- Suggest doctor if needed
+- Structure: Answer → Details → When to act
 
-### For code / technical questions:
-- Use code blocks with language labels
-- Explain the code briefly before or after
-- Offer to explain further if needed
+### Technical/code:
+- Use code blocks
+- Explain briefly
 
 ## Boundaries
-- Never diagnose definitively — always say "this may indicate" or "commonly associated with"
-- For emergencies, always say: "**Please call emergency services immediately.**"
-- Don't make up facts — say "I'm not certain" if unsure
-- Keep medical advice general and evidence-based
-
-## Context from Knowledge Base
-Use the context below IF it's relevant to the question. If not relevant, rely on your training.
+- No hallucination
+- Say "I'm not certain" if unsure
+- Emergency → **Call emergency services**
+- Keep medical advice general
 """
 
-    context_block = f"\n### Retrieved Context:\n{context}\n" if context and context.strip() else "\n### Retrieved Context:\nNone available — use general knowledge.\n"
+    # 🔥 MERGE EVERYTHING (THIS IS KEY)
+    system_prompt = f"""
+{base_prompt}
 
-    # Build messages with history
-    messages = [
-        {"role": "system", "content": system_prompt + context_block}
-    ]
+--------------------------------------------------
 
-    # Append chat history (last 10 turns for memory)
+📄 Patient Report Context:
+{system_prefix if system_prefix else "No uploaded report available."}
+
+--------------------------------------------------
+
+🔍 Retrieved Knowledge Base Context:
+{context if context else "No relevant documents found. Use general knowledge."}
+"""
+
+    # 💬 Build messages
+    messages = [{"role": "system", "content": system_prompt}]
+
+    # 🧠 Chat memory (last 10)
     for turn in chat_history[-10:]:
-        messages.append({"role": turn["role"], "content": turn["content"]})
+        messages.append({
+            "role": turn["role"],
+            "content": turn["content"]
+        })
 
-    # Add current user message
-    messages.append({"role": "user", "content": question})
+    # ❓ User question
+    messages.append({
+        "role": "user",
+        "content": question
+    })
 
+    # 🤖 LLM call
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=messages,

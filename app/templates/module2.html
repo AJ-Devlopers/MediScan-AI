@@ -6,6 +6,73 @@
 
 {% block content %}
 
+{% if has_report %}
+<div class="report-panel">
+
+    <!-- Patient Info + Score Row -->
+    <div class="report-panel-top">
+
+        <!-- Patient Card -->
+        <div class="patient-card">
+            <div class="patient-avatar">
+                {{ patient.name[0] | upper if patient.name else "?" }}
+            </div>
+            <div class="patient-info">
+                <h3 class="patient-name">{{ patient.name or "Unknown Patient" }}</h3>
+                <div class="patient-meta">
+                    {% if patient.age %}<span>Age: {{ patient.age }}</span>{% endif %}
+                    {% if patient.gender %}<span>{{ patient.gender }}</span>{% endif %}
+                    {% if patient.date %}<span>{{ patient.date }}</span>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Health Score -->
+        <div class="score-mini-card">
+            <div class="score-ring-wrap">
+                <svg width="72" height="72" viewBox="0 0 72 72">
+                    <circle cx="36" cy="36" r="30" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="6"/>
+                    <circle cx="36" cy="36" r="30" fill="none"
+                        stroke="{% if summary.score >= 70 %}#10b981{% elif summary.score >= 40 %}#f59e0b{% else %}#ef4444{% endif %}"
+                        stroke-width="6"
+                        stroke-dasharray="188.5"
+                        stroke-dashoffset="{{ 188.5 - (188.5 * summary.score / 100) }}"
+                        stroke-linecap="round"
+                        transform="rotate(-90 36 36)"/>
+                </svg>
+                <div class="score-ring-val">{{ summary.score }}</div>
+            </div>
+            <div class="score-mini-label">Health Score</div>
+            <div class="score-mini-counts">
+                <span class="cnt-high">↑ {{ summary.high }} High</span>
+                <span class="cnt-low">↓ {{ summary.low }} Low</span>
+                <span class="cnt-ok">✓ {{ summary.normal }} Normal</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Auto Suggested Questions -->
+    <div class="suggested-questions">
+    <span class="sq-label">Ask about this report:</span>
+
+    {% if questions %}
+        {% for q in questions %}
+            <button class="sq-chip" onclick="askAuto('{{ q }}')">
+                {{ q }}
+            </button>
+        {% endfor %}
+    {% else %}
+        <!-- fallback -->
+        <button class="sq-chip" onclick="askAuto('Explain my report')">Explain my report</button>
+        <button class="sq-chip" onclick="askAuto('Is my health score good?')">Health Score</button>
+        <button class="sq-chip" onclick="askAuto('What should I improve?')">Improvements</button>
+    {% endif %}
+</div>
+</div>
+{% endif %}
+
+
 <div class="rag-chat-wrapper">
 
     <!-- 🔷 Intro Card -->

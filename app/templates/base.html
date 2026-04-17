@@ -95,9 +95,11 @@
             </div>
             <div class="topbar-right">
                 <!-- THEME TOGGLE -->
-                 <button onclick="startNewSession()" class="reset-btn">
-                     Upload New Report
-                </button>
+                <form method="POST" action="/clear-session" style="margin:0;">
+                    <button type="submit" class="reset-btn">
+                        ↑ Upload New Report
+                    </button>
+                </form>
                 <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle light / dark mode">
                     <!-- 🔥 ADD THIS BUTTON HERE -->
                 

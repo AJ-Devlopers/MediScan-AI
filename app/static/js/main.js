@@ -165,6 +165,26 @@ function animateLoadingSteps(containerId) {
 // 🧠 In-memory chat history for current session
 const chatHistory = [];
 
+
+// 🔥 ADD THIS FUNCTION HERE
+function askAuto(question) {
+    const input = document.getElementById("ragQuestion");
+
+    if (!input) {
+        console.error("ragQuestion input not found");
+        return;
+    }
+
+    // set question
+    input.value = question;
+
+    // focus input (nice UX)
+    input.focus();
+
+    // trigger same submit flow
+    input.form.requestSubmit();
+}
+
 /* ── 🛡️ HTML Escape (prevents XSS in code blocks) ── */
 function escapeHtml(text) {
     return text
