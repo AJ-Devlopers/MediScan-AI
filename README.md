@@ -269,3 +269,4 @@ This project is for educational and research use. See `LICENSE` for details.
 ---
 
 *Built with FastAPI · Groq · LangGraph · ChromaDB · Sentence-Transformers*
+## Module -2 updated 
