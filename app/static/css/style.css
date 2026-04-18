@@ -840,7 +840,7 @@ ul { list-style: none; }
 
 .score-card:hover { border-color: var(--border-h); box-shadow: var(--shadow); transform: translateY(-2px); }
 
-.score-ring { position: relative; width: 120px; height: 120px; }
+/*.score-ring { position: relative; width: 120px; height: 120px; }
 .score-ring svg { display: block; }
 .score-circle { transition: stroke-dashoffset 1.5s cubic-bezier(0.4,0,0.2,1); }
 
@@ -865,7 +865,6 @@ ul { list-style: none; }
 
 .score-label { font-size: 11px; color: var(--text-dim); font-family: var(--font-mono); }
 .score-text  { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
-
 .stat-card {
     background: var(--card);
     border: 1px solid var(--border);
@@ -1166,6 +1165,60 @@ ul { list-style: none; }
     border-bottom: 1px solid var(--border);
 }
 
+/* ============================================================
+   🔥 NEW HEALTH SCORE CIRCLE (UPGRADED)
+   ============================================================ */
+.score-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+.progress-circle {
+    position: relative;
+    width: 140px;
+    height: 140px;
+}
+.progress-circle .progress {
+    stroke-linecap: round;
+    stroke-dasharray: 377;
+    stroke-dashoffset: 377;
+    transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1);
+}
+.score-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text);
+    display: flex;
+    align-items: baseline;
+    gap: 1px;
+    z-index: 2;
+    pointer-events: none;
+}
+.score-text span:last-child {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+.score-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+.score-meta {
+    display: flex;
+    gap: 10px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+}
+.meta-high   { color: var(--normal); }
+.meta-low    { color: var(--high);   }
+.meta-normal { color: var(--text-muted); }
+
 /* ── Patient inline card (Module 2 compact) ── */
 .m2-patient-card {
     display: flex;
@@ -1223,8 +1276,9 @@ ul { list-style: none; }
     position: relative;
     width: 68px; height: 68px;
 }
+*
+m2-score-ring-wrap svg { display: block; }
 
-.m2-score-ring-wrap svg { display: block; }
 
 .m2-score-val {
     position: absolute;
@@ -1879,6 +1933,7 @@ ul { list-style: none; }
     .report-panel-top { flex-direction: column; align-items: flex-start; }
     .m2-score-block   { width: 100%; justify-content: flex-start; }
 }
+
 
 @media (max-width: 800px) {
     :root { --sidebar-w: 0px; }

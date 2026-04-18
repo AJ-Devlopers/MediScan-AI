@@ -28,29 +28,60 @@
         </div>
 
         <!-- Health Score -->
-        <div class="score-mini-card">
-            <div class="score-ring-wrap">
-                <svg width="72" height="72" viewBox="0 0 72 72">
-                    <circle cx="36" cy="36" r="30" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="6"/>
-                    <circle cx="36" cy="36" r="30" fill="none"
-                        stroke="{% if summary.score >= 70 %}#10b981{% elif summary.score >= 40 %}#f59e0b{% else %}#ef4444{% endif %}"
-                        stroke-width="6"
-                        stroke-dasharray="188.5"
-                        stroke-dashoffset="{{ 188.5 - (188.5 * summary.score / 100) }}"
-                        stroke-linecap="round"
-                        transform="rotate(-90 36 36)"/>
-                </svg>
-                <div class="score-ring-val">{{ summary.score }}</div>
-            </div>
-            <div class="score-mini-label">Health Score</div>
-            <div class="score-mini-counts">
-                <span class="cnt-high">↑ {{ summary.high }} High</span>
-                <span class="cnt-low">↓ {{ summary.low }} Low</span>
-                <span class="cnt-ok">✓ {{ summary.normal }} Normal</span>
-            </div>
-        </div>
+ <!-- HEALTH SCORE -->
+<div class="score-container">
 
+    <!-- 🔵 CIRCLE -->
+    <div class="progress-circle" data-value="{{ summary.score }}">
+        
+        <svg width="140" height="140" viewBox="0 0 140 140">
+
+            <defs>
+                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#4f8ef7"/>
+                    <stop offset="100%" stop-color="#22c55e"/>
+                </linearGradient>
+            </defs>
+
+            <!-- Background Circle -->
+            <circle
+                cx="70" cy="70" r="60"
+                fill="none"
+                stroke="rgba(255,255,255,0.1)"
+                stroke-width="10"
+            />
+
+            <!-- Progress Circle -->
+            <circle
+                cx="70" cy="70" r="60"
+                fill="none"
+                stroke="url(#gradient)"
+                stroke-width="10"
+                stroke-linecap="round"
+                stroke-dasharray="377"
+                stroke-dashoffset="377"
+                transform="rotate(-90 70 70)"
+                class="progress"
+            />
+        </svg>
+
+        <!-- 🔥 CENTER TEXT (DYNAMIC) -->
+        <div class="score-text">
+            <span>{{ summary.score }}</span><span>%</span>
+        </div>
     </div>
+
+    <!-- LABEL -->
+    <div class="score-label">Health Score</div>
+
+    <!-- META DATA -->
+    <div class="score-meta">
+        <span class="meta-high">↑ {{ summary.high }} High</span>
+        <span class="meta-low">↓ {{ summary.low }} Low</span>
+        <span class="meta-normal">✓ {{ summary.normal }} Normal</span>
+    </div>
+
+</div>
 
     <!-- Auto Suggested Questions -->
     <div class="suggested-questions">

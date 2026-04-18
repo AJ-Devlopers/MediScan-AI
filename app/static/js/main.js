@@ -418,3 +418,18 @@ function startNewSession() {
 
     window.location.href = "/";
 }
+
+/* ── 🔥 NEW HEALTH SCORE PROGRESS (CIRCLE ANIMATION) ── */
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.progress-circle[data-value]').forEach(function (el) {
+        const score = parseFloat(el.getAttribute('data-value')) || 0;
+        const circle = el.querySelector('circle.progress');
+        if (circle) {
+            const offset = 377 - (score / 100) * 377;
+            setTimeout(function () {
+                circle.style.strokeDashoffset = offset;
+                circle.style.transition = 'stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)';
+            }, 100);
+        }
+    });
+});
