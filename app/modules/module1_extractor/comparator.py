@@ -1,6 +1,15 @@
 from .range_service import get_normal_range
 
 
+def format_range(low, high, unit):
+    if low is None or high is None:
+        return "N/A"
+
+    if unit:
+        return f"{low} - {high} {unit}"
+    return f"{low} - {high}"
+
+
 def compare_values(data):
     results = []
 
@@ -8,7 +17,6 @@ def compare_values(data):
         name = item.get("name", "")
         value = item.get("value")
 
-        # 🔥 SAFE VALUE CONVERSION
         try:
             value = float(value)
         except:
@@ -19,30 +27,32 @@ def compare_values(data):
         low = range_data.get("low")
         high = range_data.get("high")
 
-        # 🔥 FIX 4: BETTER STATUS HANDLING
-        if value is None:
-            status = "UNKNOWN"
+        # 🔥 priority fix
+        unit = item.get("unit") or range_data.get("unit")
 
-        elif low is None or high is None:
-            # range not found → don't break system
-            status = "UNKNOWN"
+        # 🔥 NEW
+        formatted_range = format_range(low, high, unit)
 
+        # status logic...
+        if value is None or low is None or high is None:
+            status = "UNKNOWN"
+        elif value < low:
+            status = "LOW"
+        elif value > high:
+            status = "HIGH"
         else:
-            try:
-                if value < low:
-                    status = "LOW"
-                elif value > high:
-                    status = "HIGH"
-                else:
-                    status = "NORMAL"
-            except:
-                status = "UNKNOWN"
+            status = "NORMAL"
 
         results.append({
             **item,
             "value": value,
             "status": status,
-            "normal_range": range_data
+            "normal_range": {
+                "low": low,
+                "high": high,
+                "unit": unit,
+                "display": formatted_range   # ✅ THIS IS KEY
+            }
         })
 
     return results

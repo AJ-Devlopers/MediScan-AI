@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block nav_module2 %}active{% endblock %}
+{% block page_title %}RAG Knowledge{% endblock %}
+{% block page_subtitle %}Query medical knowledge base using retrieval-augmented generation{% endblock %}
+
+{% block content %}
+
+{% if has_report %}
+<div class="report-panel">
+
+    <!-- Patient Info + Score Row -->
+    <div class="report-panel-top">
+
+        <!-- Patient Card -->
+        <div class="patient-card">
+            <div class="patient-avatar">
+                {{ patient.name[0] | upper if patient.name else "?" }}
+            </div>
+            <div class="patient-info">
+                <h3 class="patient-name">{{ patient.name or "Unknown Patient" }}</h3>
+                <div class="patient-meta">
+                    {% if patient.age %}<span>Age: {{ patient.age }}</span>{% endif %}
+                    {% if patient.gender %}<span>{{ patient.gender }}</span>{% endif %}
+                    {% if patient.date %}<span>{{ patient.date }}</span>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Health Score -->
+ <!-- HEALTH SCORE -->
+<div class="score-container">
+
+    <!-- 🔵 CIRCLE -->
+    <div class="progress-circle" data-value="{{ summary.score }}">
+        
+        <svg width="140" height="140" viewBox="0 0 140 140">
+
+            <defs>
+                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#4f8ef7"/>
+                    <stop offset="100%" stop-color="#22c55e"/>
+                </linearGradient>
+            </defs>
+
+            <!-- Background Circle -->
+            <circle
+                cx="70" cy="70" r="60"
+                fill="none"
+                stroke="rgba(255,255,255,0.1)"
+                stroke-width="10"
+            />
+
+            <!-- Progress Circle -->
+            <circle
+                cx="70" cy="70" r="60"
+                fill="none"
+                stroke="url(#gradient)"
+                stroke-width="10"
+                stroke-linecap="round"
+                stroke-dasharray="377"
+                stroke-dashoffset="377"
+                transform="rotate(-90 70 70)"
+                class="progress"
+            />
+        </svg>
+
+        <!-- 🔥 CENTER TEXT (DYNAMIC) -->
+        <div class="score-text">
+            <span>{{ summary.score }}</span><span>%</span>
+        </div>
+    </div>
+
+    <!-- LABEL -->
+    <div class="score-label">Health Score</div>
+
+    <!-- META DATA -->
+    <div class="score-meta">
+        <span class="meta-high">↑ {{ summary.high }} High</span>
+        <span class="meta-low">↓ {{ summary.low }} Low</span>
+        <span class="meta-normal">✓ {{ summary.normal }} Normal</span>
+    </div>
+
+</div>
+
+    <!-- Auto Suggested Questions -->
+    <div class="suggested-questions">
+    <span class="sq-label">Ask about this report:</span>
+
+    {% if questions %}
+        {% for q in questions %}
+            <button class="sq-chip" onclick="askAuto('{{ q }}')">
+                {{ q }}
+            </button>
+        {% endfor %}
+    {% else %}
+        <!-- fallback -->
+        <button class="sq-chip" onclick="askAuto('Explain my report')">Explain my report</button>
+        <button class="sq-chip" onclick="askAuto('Is my health score good?')">Health Score</button>
+        <button class="sq-chip" onclick="askAuto('What should I improve?')">Improvements</button>
+    {% endif %}
+</div>
+</div>
+{% endif %}
+
+
+<div class="rag-chat-wrapper">
+
+    <!-- 🔷 Intro Card -->
+    <div class="rag-intro-card">
+        <div class="rag-intro-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.64 5.64l1.42 1.42M16.94 16.94l1.42 1.42M16.94 7.06l-1.42 1.42M7.06 16.94l-1.42 1.42" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+        </div>
+        <div>
+            <h3>Medical Knowledge Base</h3>
+            <p>
+                Ask questions about medical conditions, lab values, symptoms, or treatments. 
+                The system retrieves answers from curated medical knowledge.
+            </p>
+        </div>
+    </div>
+
+    <!-- 💬 Chat Container of our chatbot -->
+     
+    <div class="chat-container" id="chatContainer">
+
+        <!-- Empty State -->
+        <div class="chat-empty" id="chatEmpty">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                <path d="M8 8h24v20H22l-6 4v-4H8V8Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                <path d="M14 16h12M14 21h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <p>Ask a medical question to get started</p>
+        </div>
+
+        <!-- Messages -->
+        <div id="chatMessages"></div>
+    </div>
+
+    <!-- ✏️ Input Form -->
+    <form class="chat-input-row" id="ragForm" onsubmit="submitRagQuery(event)">
+        <input 
+            type="text" 
+            name="question" 
+            id="ragQuestion"
+            placeholder="e.g. What does elevated creatinine indicate?"
+            class="chat-input"
+            autocomplete="off"
+            required
+        >
+
+        <button type="submit" class="btn-primary" id="ragSubmit">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M2 8l12-6-5 6 5 6-12-6Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+            </svg>
+            Ask
+        </button>
+    </form>
+
+    <!-- 💡 Hint -->
+    <p class="chat-hint">
+        Try: 
+        "What are normal HbA1c levels?" · 
+        "What causes high WBC count?" · 
+        "Explain eGFR values"
+    </p>
+
+</div>
+
+<!-- 🧠 Auto focus input -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById("ragQuestion");
+    if (input) input.focus();
+});
+</script>
+
+<!-- 🔁 Show server-side result safely -->
+{% if result %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    showMessage("{{ result.question | default('Query') | escape }}", 'user');
+    showMessage("{{ result.answer | default(result.rag_response) | escape }}", 'ai');
+});
+</script>
+{% endif %}
+
+{% endblock %}

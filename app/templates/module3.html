@@ -1,0 +1,404 @@
+{% extends "base.html" %}
+
+{% block nav_module3 %}active{% endblock %}
+{% block page_title %}AI Health Insights{% endblock %}
+{% block page_subtitle %}Advanced analysis based on your report & symptoms{% endblock %}
+
+{% block content %}
+
+{% if not has_report %}
+<div class="error-page">
+    <div class="error-visual">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+            <circle cx="32" cy="32" r="30" stroke="var(--border-h)" stroke-width="2"/>
+            <path d="M32 20v16M32 42v2" stroke="var(--high)" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+    </div>
+    <h2 class="error-title">No Report Found</h2>
+    <p class="error-message">Please upload a medical report first to access AI Health Insights.</p>
+    <a href="/" class="btn-primary">Upload Report</a>
+</div>
+
+{% else %}
+
+<!-- REPORT PANEL -->
+<div class="report-panel">
+    <div class="report-panel-top">
+
+        <!-- Patient Card -->
+        <div class="m2-patient-card">
+            <div class="m2-patient-avatar">
+                {{ patient.name[0] | upper if patient.name else "?" }}
+            </div>
+            <div class="m2-patient-info">
+                <div class="m2-patient-name">{{ patient.name or "Unknown Patient" }}</div>
+                <div class="m2-patient-meta">
+                    {% if patient.age %}<span class="m2-meta-tag">Age: {{ patient.age }}</span>{% endif %}
+                    {% if patient.gender %}<span class="m2-meta-tag">{{ patient.gender }}</span>{% endif %}
+                    {% if patient.date %}<span class="m2-meta-tag">{{ patient.date }}</span>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Health Score -->
+        <div class="score-container">
+            <div class="progress-circle" data-value="{{ summary.score }}">
+                <svg width="140" height="140" viewBox="0 0 140 140" style="position:absolute;top:0;left:0;">
+                    <defs>
+                        <linearGradient id="scoreGradM3" x1="0%" y1="100%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#4f8ef7"/>
+                            <stop offset="100%" stop-color="#22c55e"/>
+                        </linearGradient>
+                    </defs>
+                    <circle cx="70" cy="70" r="60" fill="none"
+                        stroke="rgba(255,255,255,0.08)" stroke-width="10"/>
+                    <circle cx="70" cy="70" r="60" fill="none"
+                        stroke="url(#scoreGradM3)"
+                        stroke-width="10" stroke-linecap="round"
+                        stroke-dasharray="377" stroke-dashoffset="377"
+                        transform="rotate(-90 70 70)" class="progress"/>
+                </svg>
+                <div class="score-text">
+                    <span>{{ summary.score }}</span><span>%</span>
+                </div>
+            </div>
+            <div class="score-label">Health Score</div>
+            <div class="score-meta">
+                <span class="meta-high">↑ {{ summary.high }} High</span>
+                <span class="meta-low">↓ {{ summary.low }} Low</span>
+                <span class="meta-normal">✓ {{ summary.normal }} Normal</span>
+            </div>
+        </div>
+
+        <!-- Quick Ask -->
+        <div class="suggested-questions">
+            <span class="sq-label">Quick Ask:</span>
+            <button class="sq-chip" onclick="scrollToForm()">Analyze my report</button>
+            <button class="sq-chip" onclick="scrollToForm()">What should I improve?</button>
+        </div>
+
+    </div>
+</div>
+
+<!-- HIDDEN patient data for JS autofill -->
+<div id="patientData"
+    data-age="{{ patient.age or '' }}"
+    data-gender="{{ patient.gender or '' }}"
+    data-name="{{ patient.name or '' }}"
+    style="display:none;">
+</div>
+
+<!-- AI FOLLOW-UP QUESTIONS -->
+{% if dynamic_questions %}
+<div class="section-header">
+    <span class="section-line"></span>
+    <h2 class="section-title">AI Follow-up Questions</h2>
+</div>
+<div class="suggestions-card">
+    {% for q in dynamic_questions %}
+    <div class="suggestion-item">
+        <div class="suggestion-dot"></div>
+        <p>{{ q }}</p>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- STEP FORM -->
+<div class="section-header" id="formSection">
+    <span class="section-line"></span>
+    <h2 class="section-title">Provide Additional Details</h2>
+</div>
+
+<!-- STEP INDICATORS -->
+<div class="m3-steps-bar">
+    <div class="m3-step-item active" id="stepInd1">
+        <div class="m3-step-dot">1</div>
+        <span>Basic Info</span>
+    </div>
+    <div class="m3-step-connector"></div>
+    <div class="m3-step-item" id="stepInd2">
+        <div class="m3-step-dot">2</div>
+        <span>Symptoms</span>
+    </div>
+    <div class="m3-step-connector"></div>
+    <div class="m3-step-item" id="stepInd3">
+        <div class="m3-step-dot">3</div>
+        <span>Timeline</span>
+    </div>
+    <div class="m3-step-connector"></div>
+    <div class="m3-step-item" id="stepInd4">
+        <div class="m3-step-dot">4</div>
+        <span>History</span>
+    </div>
+    <div class="m3-step-connector"></div>
+    <div class="m3-step-item" id="stepInd5">
+        <div class="m3-step-dot">5</div>
+        <span>Analysis</span>
+    </div>
+</div>
+
+<form id="module3Form" onsubmit="submitPatientData(event)">
+
+<!-- ── STEP 1: BASIC INFO ── -->
+<div class="m3-step-panel active" id="step1">
+    <div class="m3-form-card">
+        <div class="m3-form-card-header">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <circle cx="9" cy="6" r="3.5" stroke="currentColor" stroke-width="1.4"/>
+                <path d="M2 16c0-3.9 3.1-7 7-7s7 3.1 7 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+            Basic Information
+        </div>
+        <div class="m3-input-grid">
+            <div class="m3-field">
+                <label class="m3-label">Age</label>
+                <input type="number" name="age" id="fieldAge" class="m3-input" placeholder="e.g. 45">
+            </div>
+            <div class="m3-field">
+                <label class="m3-label">Height</label>
+                <input type="text" name="height" id="fieldHeight" class="m3-input" placeholder="e.g. 170 cm">
+            </div>
+            <div class="m3-field">
+                <label class="m3-label">Weight</label>
+                <input type="text" name="weight" id="fieldWeight" class="m3-input" placeholder="e.g. 70 kg">
+            </div>
+            <div class="m3-field">
+                <label class="m3-label">Gender</label>
+                <select name="gender" id="fieldGender" class="m3-input m3-select">
+                    <option value="">Select gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+        </div>
+        <div class="m3-step-actions">
+            <button type="button" class="btn-primary" onclick="goStep(2)">
+                Next — Symptoms
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ── STEP 2: SYMPTOMS ── -->
+<div class="m3-step-panel" id="step2">
+    <div class="m3-form-card">
+        <div class="m3-form-card-header">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path d="M9 2v4M9 12v4M2 9h4M12 9h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                <circle cx="9" cy="9" r="3" stroke="currentColor" stroke-width="1.4"/>
+            </svg>
+            Symptoms
+        </div>
+
+        <div class="m3-field">
+            <label class="m3-label">Are you experiencing any symptoms?</label>
+            <div class="m3-radio-row">
+                <button type="button" class="m3-radio-btn active" id="sympYes"
+                    onclick="toggleSymptomSection(true)">Yes</button>
+                <button type="button" class="m3-radio-btn" id="sympNo"
+                    onclick="toggleSymptomSection(false)">No</button>
+            </div>
+        </div>
+
+        <div id="symptomSection">
+            {% if dynamic_symptoms %}
+            <div class="m3-field">
+                <label class="m3-label">Common Symptoms — select all that apply</label>
+                <div class="m3-symptom-chips" id="symptomChips">
+                    <button type="button" class="m3-symptom-btn"
+                        onclick="this.classList.toggle('active')">None</button>
+                    {% for s in dynamic_symptoms %}
+                    <button type="button" class="m3-symptom-btn"
+                        onclick="toggleSymptom(this)">{{ s }}</button>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="m3-field">
+                <label class="m3-label">Add other symptoms</label>
+                <div class="m3-tag-input-wrap">
+                    <div class="m3-tag-list" id="customSymptomTags"></div>
+                    <div class="m3-tag-input-row">
+                        <input type="text" id="customSymptomInput" class="m3-input"
+                            placeholder="Type a symptom and press Enter or +"
+                            onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomSymptom();}">
+                        <button type="button" class="m3-add-btn" onclick="addCustomSymptom()">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <input type="hidden" name="symptoms" id="symptomsHidden">
+
+        <div class="m3-step-actions">
+            <button type="button" class="m3-back-btn" onclick="goStep(1)">← Back</button>
+            <button type="button" class="btn-primary" onclick="goStep(3)">
+                Next — Timeline
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ── STEP 3: TIMELINE ── -->
+<div class="m3-step-panel" id="step3">
+    <div class="m3-form-card">
+        <div class="m3-form-card-header">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <circle cx="9" cy="9" r="7" stroke="currentColor" stroke-width="1.4"/>
+                <path d="M9 5v4l2.5 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            </svg>
+            Symptom Timeline
+        </div>
+        <div class="m3-field">
+            <label class="m3-label">How long have you had these symptoms?</label>
+            <div class="m3-timeline-grid">
+                <button type="button" class="m3-timeline-btn" onclick="selectTimeline(this, 'Less than 1 week')">
+                    <span class="m3-timeline-icon">📅</span>
+                    <span class="m3-timeline-label">Less than 1 week</span>
+                </button>
+                <button type="button" class="m3-timeline-btn" onclick="selectTimeline(this, '1–2 weeks')">
+                    <span class="m3-timeline-icon">🗓</span>
+                    <span class="m3-timeline-label">1–2 weeks</span>
+                </button>
+                <button type="button" class="m3-timeline-btn" onclick="selectTimeline(this, '2–4 weeks')">
+                    <span class="m3-timeline-icon">📆</span>
+                    <span class="m3-timeline-label">2–4 weeks</span>
+                </button>
+                <button type="button" class="m3-timeline-btn" onclick="selectTimeline(this, '1–3 months')">
+                    <span class="m3-timeline-icon">🕐</span>
+                    <span class="m3-timeline-label">1–3 months</span>
+                </button>
+                <button type="button" class="m3-timeline-btn" onclick="selectTimeline(this, '3–6 months')">
+                    <span class="m3-timeline-icon">🕓</span>
+                    <span class="m3-timeline-label">3–6 months</span>
+                </button>
+                <button type="button" class="m3-timeline-btn" onclick="selectTimeline(this, 'More than 6 months')">
+                    <span class="m3-timeline-icon">📊</span>
+                    <span class="m3-timeline-label">More than 6 months</span>
+                </button>
+            </div>
+        </div>
+        <div class="m3-field">
+            <label class="m3-label">Or specify exactly</label>
+            <input type="text" name="duration" id="durationInput" class="m3-input"
+                placeholder="e.g. 3 weeks, since January…">
+        </div>
+        <div class="m3-step-actions">
+            <button type="button" class="m3-back-btn" onclick="goStep(2)">← Back</button>
+            <button type="button" class="btn-primary" onclick="goStep(4)">
+                Next — Medical History
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M3 7h8M7 3l4 4-4 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ── STEP 4: CHRONIC HISTORY ── -->
+<div class="m3-step-panel" id="step4">
+    <div class="m3-form-card">
+        <div class="m3-form-card-header">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path d="M4 9h10M9 4v10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                <rect x="2" y="2" width="14" height="14" rx="3" stroke="currentColor" stroke-width="1.4"/>
+            </svg>
+            Medical History
+        </div>
+
+        <div class="m3-field">
+            <label class="m3-label">Do you have any chronic diseases?</label>
+            <div class="m3-radio-row">
+                <button type="button" class="m3-radio-btn" id="chronicYes"
+                    onclick="toggleChronicSection(true)">Yes</button>
+                <button type="button" class="m3-radio-btn active" id="chronicNo"
+                    onclick="toggleChronicSection(false)">No</button>
+            </div>
+        </div>
+
+        <div id="chronicSection" style="display:none;">
+            <div class="m3-field">
+                <label class="m3-label">Add your conditions</label>
+                <div id="chronicList" class="m3-chronic-list"></div>
+                <div class="m3-chronic-add-row">
+                    <input type="text" id="chronicDiseaseInput" class="m3-input"
+                        placeholder="Disease name (e.g. Diabetes, Hypertension)">
+                    <input type="text" id="chronicPeriodInput" class="m3-input"
+                        placeholder="Since when? (e.g. 2 years)">
+                    <button type="button" class="m3-add-btn" onclick="addChronicDisease()">+</button>
+                </div>
+            </div>
+        </div>
+
+        <input type="hidden" name="chronic" id="chronicHidden" value="no">
+        <input type="hidden" name="chronic_type" id="chronicTypeHidden" value="">
+
+        <div class="m3-step-actions">
+            <button type="button" class="m3-back-btn" onclick="goStep(3)">← Back</button>
+            <button type="submit" class="btn-primary" id="m3SubmitBtn">
+                <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                    <circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.3"/>
+                    <path d="M5 7.5l2 2 3-3" stroke="currentColor" stroke-width="1.3"
+                        stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Analyze with AI
+            </button>
+        </div>
+    </div>
+</div>
+
+</form>
+
+<!-- ── STEP 5: AI OUTPUT ── -->
+<div id="step5Panel" style="display:none;">
+
+<div class="section-header">
+    <span class="section-line"></span>
+    <h2 class="section-title">AI Insights</h2>
+    <button class="m3-pdf-btn" onclick="saveAsPDF()" id="pdfBtn" style="margin-left:auto;">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M3 11H2a1 1 0 01-1-1V3a1 1 0 011-1h5l3 3v5a1 1 0 01-1 1h-1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            <rect x="3" y="8" width="8" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/>
+            <path d="M7 8V6M5.5 7L7 8l1.5-1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Save as PDF
+    </button>
+</div>
+
+<div id="m3Output" class="m3-output-card">
+    <div class="m3-output-empty">
+        <p>Your AI analysis will appear here</p>
+    </div>
+</div>
+
+<!-- Chat with AI CTA -->
+<div class="m3-chat-cta">
+    <div class="m3-chat-cta-text">
+        <strong>Want to know more?</strong>
+        <p>Chat with our AI about your results, diet, medications, or any health questions.</p>
+    </div>
+    <a href="/module2" class="m3-chat-btn">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M3 3h12v10H10l-3 2v-2H3V3Z"
+                stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+            <path d="M6 7h6M6 10h4" stroke="currentColor"
+                stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        Chat with AI Bot
+    </a>
+</div>
+
+</div>
+
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,24 @@
+{
+  "hemoglobin": { "weight": 4, "category": "blood" },
+  "wbc": { "weight": 5, "category": "infection" },
+  "platelet": { "weight": 4, "category": "blood" },
+
+  "bilirubin": { "weight": 5, "category": "liver" },
+  "alt": { "weight": 5, "category": "liver" },
+  "ast": { "weight": 5, "category": "liver" },
+
+  "creatinine": { "weight": 5, "category": "kidney" },
+  "urea": { "weight": 5, "category": "kidney" },
+
+  "glucose": { "weight": 5, "category": "metabolic" },
+  "hba1c": { "weight": 4, "category": "metabolic" },
+
+  "cholesterol": { "weight": 4, "category": "cardiac" },
+  "ldl": { "weight": 5, "category": "cardiac" },
+
+  "potassium": { "weight": 5, "category": "electrolyte" },
+  "sodium": { "weight": 5, "category": "electrolyte" },
+
+  "vitamin d": { "weight": 2, "category": "vitamin" },
+  "vitamin b12": { "weight": 3, "category": "vitamin" }
+}
