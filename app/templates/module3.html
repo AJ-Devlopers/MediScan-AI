@@ -1,158 +1,198 @@
 {% extends "base.html" %}
 
 {% block nav_module3 %}active{% endblock %}
-{% block page_title %}AI Agents{% endblock %}
-{% block page_subtitle %}Multi-agent pipeline — warnings, comparisons & suggestions{% endblock %}
+{% block page_title %}AI Health Insights{% endblock %}
+{% block page_subtitle %}Advanced analysis based on your report & symptoms{% endblock %}
 
 {% block content %}
 
-<div class="upload-zone-wrapper">
-    <div class="upload-zone">
-        <div class="upload-icon-ring">
-            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                <circle cx="14" cy="10" r="4" stroke="currentColor" stroke-width="1.5"/>
-                <circle cx="6" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/>
-                <circle cx="22" cy="20" r="3" stroke="currentColor" stroke-width="1.5"/>
-                <path d="M10 13l-2 4M18 13l2 4M10 13h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-        </div>
-        <h3 class="upload-title">Upload Report for Agent Analysis</h3>
-        <p class="upload-sub">Three AI agents will analyze: Warning Detection · Comparison · Suggestions</p>
-        <form action="/module3/analyze" method="post" enctype="multipart/form-data" id="agentForm">
-            <label class="upload-btn" for="agentFile">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                    <path d="M7 1v8M4 4l3-3 3 3M2 10v1.5A1.5 1.5 0 003.5 13h7A1.5 1.5 0 0012 11.5V10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                Select PDF
-            </label>
-            <input type="file" name="file" id="agentFile" accept=".pdf" required style="display:none;" onchange="handleAgentFile(this)">
-            <div id="agentFileDisplay" style="display:none; margin-top:12px;">
-                <span class="file-name-display" id="agentFileName"></span>
-                <button type="submit" class="btn-primary" onclick="showAgentLoading()">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                        <path d="M7 1l1.5 4 4.3.4L9.6 8l.8 4.2L7 10l-3.4 2.2.8-4.2L2.2 5.4l4.3-.4L7 1Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
-                    </svg>
-                    Run Agents
-                </button>
+{% if not has_report %}
+<div class="error-page">
+    <div class="error-visual">
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+            <circle cx="32" cy="32" r="30" stroke="var(--border-h)" stroke-width="2"/>
+            <path d="M32 20v16M32 42v2" stroke="var(--high)" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+    </div>
+    <h2 class="error-title">No Report Found</h2>
+    <p class="error-message">Please upload a medical report first to access AI Health Insights.</p>
+    <a href="/" class="btn-primary">Upload Report</a>
+</div>
+
+{% else %}
+
+<!-- REPORT PANEL -->
+<div class="report-panel">
+    <div class="report-panel-top">
+
+        <!-- Patient Card -->
+        <div class="m2-patient-card">
+            <div class="m2-patient-avatar">
+                {{ patient.name[0] | upper if patient.name else "?" }}
             </div>
-        </form>
-    </div>
-</div>
-
-<div class="loading-overlay" id="agentLoading" style="display:none;">
-    <div class="loading-card">
-        <div class="loading-pulse"></div>
-        <h3>Agents Running</h3>
-        <p>Multi-agent pipeline processing your report…</p>
-        <div class="loading-steps">
-            <div class="step active">Warning Agent — scanning anomalies</div>
-            <div class="step">Comparator Agent — benchmarking</div>
-            <div class="step">Suggestion Agent — recommendations</div>
+            <div class="m2-patient-info">
+                <div class="m2-patient-name">{{ patient.name or "Unknown Patient" }}</div>
+                <div class="m2-patient-meta">
+                    {% if patient.age %}<span class="m2-meta-tag">Age: {{ patient.age }}</span>{% endif %}
+                    {% if patient.gender %}<span class="m2-meta-tag">{{ patient.gender }}</span>{% endif %}
+                    {% if patient.date %}<span class="m2-meta-tag">{{ patient.date }}</span>{% endif %}
+                </div>
+            </div>
         </div>
+
+        <!-- Health Score Circle -->
+        <div class="score-container">
+            <div class="progress-circle" data-value="{{ summary.score }}">
+                <svg width="140" height="140" viewBox="0 0 140 140" style="position:absolute;top:0;left:0;">
+                    <defs>
+                        <linearGradient id="scoreGradM3" x1="0%" y1="100%" x2="100%" y2="0%">
+                            <stop offset="0%" stop-color="#4f8ef7"/>
+                            <stop offset="100%" stop-color="#22c55e"/>
+                        </linearGradient>
+                    </defs>
+                    <circle cx="70" cy="70" r="60" fill="none"
+                        stroke="rgba(255,255,255,0.08)" stroke-width="10"/>
+                    <circle cx="70" cy="70" r="60" fill="none"
+                        stroke="url(#scoreGradM3)"
+                        stroke-width="10"
+                        stroke-linecap="round"
+                        stroke-dasharray="377"
+                        stroke-dashoffset="377"
+                        transform="rotate(-90 70 70)"
+                        class="progress"/>
+                </svg>
+                <div class="score-text">
+                    <span>{{ summary.score }}</span><span>%</span>
+                </div>
+            </div>
+            <div class="score-label">Health Score</div>
+            <div class="score-meta">
+                <span class="meta-high">↑ {{ summary.high }} High</span>
+                <span class="meta-low">↓ {{ summary.low }} Low</span>
+                <span class="meta-normal">✓ {{ summary.normal }} Normal</span>
+            </div>
+        </div>
+
+        <!-- Suggested Questions -->
+        <div class="suggested-questions">
+            <span class="sq-label">Quick Ask:</span>
+            {% if questions %}
+                {% for q in questions %}
+                    <button class="sq-chip" onclick="askAuto('{{ q }}')">{{ q }}</button>
+                {% endfor %}
+            {% else %}
+                <button class="sq-chip" onclick="scrollToForm()">Analyze my report</button>
+                <button class="sq-chip" onclick="scrollToForm()">What should I improve?</button>
+            {% endif %}
+        </div>
+
     </div>
 </div>
 
-{% if result %}
-
-<!-- AGENT PIPELINE VISUAL -->
+<!-- AI FOLLOW-UP QUESTIONS -->
+{% if dynamic_questions %}
 <div class="section-header">
     <span class="section-line"></span>
-    <h2 class="section-title">Agent Pipeline Results</h2>
-</div>
-
-<div class="agent-pipeline">
-    <div class="agent-node">
-        <div class="agent-icon warning-agent">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M10 2L18.66 17H1.34L10 2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-                <path d="M10 8v4M10 13.5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-        </div>
-        <span class="agent-name">Warning Agent</span>
-        <span class="agent-status-dot active"></span>
-    </div>
-    <div class="agent-connector"></div>
-    <div class="agent-node">
-        <div class="agent-icon compare-agent">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M4 10h12M10 4l6 6-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </div>
-        <span class="agent-name">Comparator</span>
-        <span class="agent-status-dot active"></span>
-    </div>
-    <div class="agent-connector"></div>
-    <div class="agent-node">
-        <div class="agent-icon suggest-agent">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/>
-                <path d="M10 6v5l3 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-        </div>
-        <span class="agent-name">Suggestion Agent</span>
-        <span class="agent-status-dot active"></span>
-    </div>
-</div>
-
-<!-- WARNINGS -->
-{% if result.warnings %}
-<div class="section-header">
-    <span class="section-line"></span>
-    <h2 class="section-title">Warnings Detected</h2>
-</div>
-<div class="warnings-grid">
-    {% for w in result.warnings %}
-    <div class="warning-item">
-        <div class="warning-icon">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M8 1.5L14.93 14H1.07L8 1.5Z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
-                <path d="M8 6.5v3M8 11v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-            </svg>
-        </div>
-        <p>{{ w }}</p>
-    </div>
-    {% endfor %}
-</div>
-{% endif %}
-
-<!-- COMPARISON -->
-{% if result.comparison %}
-<div class="section-header">
-    <span class="section-line"></span>
-    <h2 class="section-title">Comparative Analysis</h2>
+    <h2 class="section-title">AI Follow-up Questions</h2>
 </div>
 <div class="suggestions-card">
-    {% for c in result.comparison %}
-    <div class="suggestion-item">
-        <div class="suggestion-dot" style="background: #7b8fff;"></div>
-        <p>{{ c }}</p>
-    </div>
-    {% endfor %}
-</div>
-{% endif %}
-
-<!-- SUGGESTIONS -->
-{% if result.suggestions %}
-<div class="section-header">
-    <span class="section-line"></span>
-    <h2 class="section-title">Agent Recommendations</h2>
-</div>
-<div class="suggestions-card">
-    {% for s in result.suggestions %}
+    {% for q in dynamic_questions %}
     <div class="suggestion-item">
         <div class="suggestion-dot"></div>
-        <p>{{ s }}</p>
+        <p>{{ q }}</p>
     </div>
     {% endfor %}
 </div>
 {% endif %}
 
-<div class="disclaimer-card">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-        <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.3"/>
-        <path d="M8 7v4M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-    </svg>
-    AI agent outputs are for research and informational use only. Not a substitute for clinical diagnosis.
+<!-- PATIENT INPUT FORM -->
+<div class="section-header" id="formSection">
+    <span class="section-line"></span>
+    <h2 class="section-title">Provide Additional Details</h2>
+</div>
+
+<form id="module3Form" onsubmit="submitPatientData(event)">
+    <div class="m3-form-card">
+
+        <!-- Basic Info -->
+        <div class="m3-form-group">
+            <label class="m3-label">Basic Info</label>
+            <div class="m3-input-row">
+                <input type="number" name="age" placeholder="Age" class="m3-input"
+                    value="{{ patient.age or '' }}">
+                <input type="text" name="height" placeholder="Height (e.g. 170cm)" class="m3-input">
+                <input type="text" name="weight" placeholder="Weight (e.g. 70kg)" class="m3-input">
+            </div>
+        </div>
+
+        <!-- Symptoms -->
+        {% if dynamic_symptoms %}
+        <div class="m3-form-group">
+            <label class="m3-label">Common Symptoms — select all that apply</label>
+            <div class="m3-symptom-chips" id="symptomChips">
+                {% for s in dynamic_symptoms %}
+                <button type="button" class="m3-symptom-btn" onclick="this.classList.toggle('active')">
+                    {{ s }}
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Other Symptoms -->
+        <div class="m3-form-group">
+            <label class="m3-label">Other Symptoms / Notes</label>
+            <textarea name="symptoms" class="m3-textarea"
+                placeholder="Describe any other symptoms, pain, discomfort…" rows="3"></textarea>
+        </div>
+
+        <!-- Chronic Disease -->
+        <div class="m3-form-group">
+            <label class="m3-label">Chronic Disease</label>
+            <div class="m3-input-row">
+                <select name="chronic" class="m3-input m3-select" onchange="toggleChronicInput(this)">
+                    <option value="no">No Chronic Disease</option>
+                    <option value="yes">Yes, I have a chronic disease</option>
+                </select>
+                <input type="text" name="chronic_type" id="chronicTypeInput" class="m3-input"
+                    placeholder="Specify (e.g. Diabetes, Hypertension)" style="display:none;">
+            </div>
+        </div>
+
+        <!-- Duration -->
+        <div class="m3-form-group">
+            <label class="m3-label">Duration of Symptoms</label>
+            <input type="text" name="duration" class="m3-input"
+                placeholder="e.g. 2 weeks, 3 months">
+        </div>
+
+        <button type="submit" class="btn-primary" id="m3SubmitBtn" style="margin-top:8px;">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                <circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.3"/>
+                <path d="M5 7.5l2 2 3-3" stroke="currentColor" stroke-width="1.3"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Analyze with AI
+        </button>
+
+    </div>
+</form>
+
+<!-- AI OUTPUT -->
+<div class="section-header">
+    <span class="section-line"></span>
+    <h2 class="section-title">AI Insights</h2>
+</div>
+
+<div id="m3Output" class="m3-output-card">
+    <div class="m3-output-empty">
+        <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+            <circle cx="18" cy="18" r="16" stroke="currentColor" stroke-width="1.5" opacity="0.3"/>
+            <path d="M18 12v8M18 24v1" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" opacity="0.4"/>
+        </svg>
+        <p>Your AI analysis will appear here after submission</p>
+    </div>
 </div>
 
 {% endif %}

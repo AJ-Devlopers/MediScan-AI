@@ -433,3 +433,121 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
+/* ── MODULE 3 ── */
+
+function scrollToForm() {
+    const el = document.getElementById('formSection');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+}
+
+function toggleChronicInput(select) {
+    const input = document.getElementById('chronicTypeInput');
+    if (!input) return;
+    input.style.display = select.value === 'yes' ? 'block' : 'none';
+}
+
+async function submitPatientData(e) {
+    e.preventDefault();
+
+    const btn = document.getElementById('m3SubmitBtn');
+    const output = document.getElementById('m3Output');
+
+    // Button loading state
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" style="animation:spin 0.8s linear infinite">
+                <circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.3" stroke-dasharray="20 18"/>
+            </svg>
+            Analyzing…`;
+    }
+
+    // Show loading in output
+    if (output) {
+        output.innerHTML = `
+            <div class="m3-output-empty">
+                <div class="loading-pulse" style="width:36px;height:36px;margin:0 auto 12px;"></div>
+                <p>AI is analyzing your data…</p>
+            </div>`;
+    }
+
+    const form = new FormData(e.target);
+    const payload = {};
+    form.forEach((v, k) => payload[k] = v);
+
+    // Collect selected symptom chips
+    const selected = [...document.querySelectorAll('.m3-symptom-btn.active')]
+        .map(b => b.innerText.trim());
+    const extraSymptoms = (payload.symptoms || '').trim();
+    payload.symptoms = [...selected, extraSymptoms].filter(Boolean).join(', ');
+    payload.previous_answers = payload;
+
+    try {
+        const res = await fetch('/module3/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        const result = data.result || {};
+
+        const warnings   = result.warnings || [];
+        const followups  = result.suggestions?.followups || [];
+        const diet       = result.suggestions?.diet || [];
+        const lifestyle  = result.suggestions?.lifestyle || [];
+        const nextQs     = data.next_questions || [];
+
+        function renderList(items, type) {
+            if (!items.length) return `<p style="font-size:12px;color:var(--text-dim);padding:8px 0;">None identified</p>`;
+            return `<div class="m3-output-list">
+                ${items.map(i => `
+                    <div class="m3-output-item ${type}">
+                        <div class="m3-dot"></div>
+                        <span>${i}</span>
+                    </div>`).join('')}
+            </div>`;
+        }
+
+        output.innerHTML = `
+            <div class="m3-section">
+                <div class="m3-section-title">⚠ Warnings</div>
+                ${renderList(warnings, 'warning')}
+            </div>
+            <div class="m3-section">
+                <div class="m3-section-title">🧪 Follow-up Tests</div>
+                ${renderList(followups, 'followup')}
+            </div>
+            <div class="m3-section">
+                <div class="m3-section-title">🥗 Diet Recommendations</div>
+                ${renderList(diet, 'diet')}
+            </div>
+            <div class="m3-section">
+                <div class="m3-section-title">💪 Lifestyle Changes</div>
+                ${renderList(lifestyle, 'lifestyle')}
+            </div>
+            ${nextQs.length ? `
+            <div class="m3-section">
+                <div class="m3-section-title">🔁 AI Follow-up Questions</div>
+                ${renderList(nextQs, '')}
+            </div>` : ''}
+        `;
+
+    } catch (err) {
+        if (output) output.innerHTML = `
+            <div class="m3-output-empty">
+                <p style="color:var(--high);">⚠ Connection error. Please try again.</p>
+            </div>`;
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `
+                <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                    <circle cx="7.5" cy="7.5" r="6" stroke="currentColor" stroke-width="1.3"/>
+                    <path d="M5 7.5l2 2 3-3" stroke="currentColor" stroke-width="1.3"
+                        stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Analyze with AI`;
+        }
+    }
+}

@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
-from app.routers import module1, module2
+from app.routers import module1, module2, module3   # 🔥 ADD module3
 from app.modules.module2_rag.knowledge_loader import load_knowledge_base
 
 import os
@@ -33,6 +33,9 @@ def startup_event():
 # 🔗 Routers
 app.include_router(module1.router)
 app.include_router(module2.router, prefix="/module2")
+
+# 🔥 ADD THIS (Module-3)
+app.include_router(module3.router, prefix="/module3")
 
 # 📁 Static files
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
