@@ -14,20 +14,17 @@ templates = Jinja2Templates(directory="app/templates")
 
 
 # ─────────────────────────────────────────────
-# 📥 REQUEST MODEL (USER INPUT)
+# 📥 REQUEST MODEL
 # ─────────────────────────────────────────────
 class PatientInput(BaseModel):
-    age: Optional[int] = None
-    height: Optional[float] = None
-    weight: Optional[float] = None
-
-    symptoms: Optional[str] = ""
-    duration: Optional[str] = ""
-
-    chronic: Optional[str] = "no"
+    age:          Optional[int] = None
+    height:       Optional[str] = None   # string — "170 cm" from form
+    weight:       Optional[str] = None   # string — "70 kg" from form
+    gender:       Optional[str] = ""     # added field
+    symptoms:     Optional[str] = ""
+    duration:     Optional[str] = ""
+    chronic:      Optional[str] = "no"
     chronic_type: Optional[str] = ""
-
-    # ⚠️ safer default
     previous_answers: Optional[Dict[str, Any]] = None
 
 
@@ -36,10 +33,10 @@ class PatientInput(BaseModel):
 # ─────────────────────────────────────────────
 @router.get("/")
 def module3_page(request: Request):
+    from app.core.store import report_store
     session_id = request.session.get("session_id")
-    report = report_store.get(session_id)
+    report = report_store.get(session_id) if session_id else None
 
-    # ❌ No report
     if not report:
         return templates.TemplateResponse(
             request=request,
@@ -51,32 +48,26 @@ def module3_page(request: Request):
             }
         )
 
-    # 🧠 STEP 1: Comparator
     analysis = analyze_values(report.get("data", []))
 
-    # 🧠 STEP 2: Hybrid Questions (initial)
     dynamic = generate_dynamic_questions(
         report.get("data", []),
         analysis,
         previous_answers=None
     )
 
-    # ✅ FIXED TemplateResponse
     return templates.TemplateResponse(
         request=request,
         name="module3.html",
         context={
-            "request": request,
-
-            "patient": report.get("patient", {}),
-            "summary": report.get("summary", {}),
-            "report_data": report.get("data", []),
-
+            "request":          request,
+            "patient":          report.get("patient", {}),
+            "summary":          report.get("summary", {}),
+            "report_data":      report.get("data", []),
             "dynamic_questions": dynamic.get("questions", []),
             "dynamic_symptoms": dynamic.get("symptoms", []),
-
-            "analysis": analysis,
-            "has_report": True
+            "analysis":         analysis,
+            "has_report":       True
         }
     )
 
@@ -90,13 +81,9 @@ async def analyze(request: Request, body: PatientInput):
     report = report_store.get(session_id)
 
     if not report:
-        return JSONResponse(
-            {"error": "No report found"},
-            status_code=400
-        )
+        return JSONResponse({"error": "No report found. Session may have expired."}, status_code=400)
 
     try:
-        # 🧠 MAIN AI PIPELINE
         result = run_full_analysis(
             report_data=report.get("data", []),
             summary=report.get("summary", {}),
@@ -104,7 +91,6 @@ async def analyze(request: Request, body: PatientInput):
             extra=body.dict()
         )
 
-        # 🧠 ADAPTIVE QUESTIONS (STEP 5)
         analysis = analyze_values(report.get("data", []))
 
         next_dynamic = generate_dynamic_questions(
@@ -114,13 +100,23 @@ async def analyze(request: Request, body: PatientInput):
         )
 
         return JSONResponse({
-            "result": result,
+            "result": {
+                "warnings": result.get("warnings", []),
+                "suggestions": result.get("suggestions", {
+                    "diet": [],
+                    "lifestyle": [],
+                    "followups": []
+                })
+            },
             "next_questions": next_dynamic.get("questions", []),
-            "next_symptoms": next_dynamic.get("symptoms", [])
+            "next_symptoms":  next_dynamic.get("symptoms", [])
         })
 
     except Exception as e:
+        import traceback
+        tb = traceback.format_exc()
+        print("MODULE 3 ERROR:\n", tb)
         return JSONResponse(
-            {"error": str(e)},
+            {"error": str(e), "detail": tb},
             status_code=500
         )
