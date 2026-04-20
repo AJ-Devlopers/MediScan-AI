@@ -625,6 +625,12 @@ ul { list-style: none; }
     filter: drop-shadow(0 0 8px var(--accent-glow));
 }
 
+.upload-icon-ring:hover {
+    transform: scale(1.08);
+    transition: all 0.2s ease;
+    box-shadow: 0 0 20px rgba(79,142,247,0.3);
+}
+
 @keyframes icon-rotate { to { transform: rotate(360deg); } }
 
 .upload-title {
