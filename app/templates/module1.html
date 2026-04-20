@@ -7,6 +7,7 @@
 {% block content %}
 
 <!-- UPLOAD SECTION -->
+{% if not result %}
 <div class="upload-zone-wrapper">
     <div class="upload-zone" id="uploadZone">
         <div class="upload-icon-ring">
@@ -17,7 +18,7 @@
         </div>
         <h3 class="upload-title">Drop your medical report here</h3>
         <p class="upload-sub">Supports PDF files · AI-powered extraction</p>
-        <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm">
+        <form action="/m1/upload" method="post" enctype="multipart/form-data" id="uploadForm">
             <label class="upload-btn" for="fileInput">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                     <path d="M7 1v8M4 4l3-3 3 3M2 10v1.5A1.5 1.5 0 003.5 13h7A1.5 1.5 0 0012 11.5V10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
@@ -38,6 +39,7 @@
         </form>
     </div>
 </div>
+{% endif %}
 
 <!-- LOADING OVERLAY -->
 <div class="loading-overlay" id="loadingOverlay" style="display:none;">
