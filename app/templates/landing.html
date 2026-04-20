@@ -1,0 +1,414 @@
+{% extends "base_landing.html" %}
+
+{% block page_title %}MediScan AI — Your Smart Medical Companion{% endblock %}
+
+{% block content %}
+
+<!-- ══════════════════════════════════════════════
+     HERO SECTION
+══════════════════════════════════════════════ -->
+<section class="hero">
+
+    <!-- Animated grid background -->
+    <div class="hero-grid" aria-hidden="true"></div>
+
+    <!-- Floating orbs -->
+    <div class="orb orb-1" aria-hidden="true"></div>
+    <div class="orb orb-2" aria-hidden="true"></div>
+    <div class="orb orb-3" aria-hidden="true"></div>
+
+    <!-- Scan line sweep -->
+    <div class="scan-line" aria-hidden="true"></div>
+
+    <div class="hero-inner">
+
+        <!-- LEFT: Copy -->
+        <div class="hero-copy">
+            <div class="hero-eyebrow">
+                <span class="eyebrow-dot"></span>
+                AI-Powered Diagnostics · v2.0
+            </div>
+
+            <h1 class="hero-heading">
+                Read your<br>
+                <span class="hero-accent">medical report</span><br>
+                like a doctor
+            </h1>
+
+            <p class="hero-sub">
+                Upload any lab report. MediScan extracts every value,
+                flags anomalies, and lets you chat with an AI that
+                actually understands your results.
+            </p>
+
+            <div class="hero-actions">
+                <a href="/m1" class="cta-primary">
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                        <path d="M9 10V3M9 3L6 6M9 3l3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M3 13v1.5A1.5 1.5 0 004.5 16h9a1.5 1.5 0 001.5-1.5V13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                    </svg>
+                    Upload Report
+                </a>
+                <a href="/module2" class="cta-secondary">
+                    Chat with AI
+                    <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
+                        <path d="M3 7.5h9M8 3l4.5 4.5L8 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </a>
+            </div>
+
+            <!-- Stats row -->
+            <div class="hero-stats">
+                <div class="hstat">
+                    <span class="hstat-num">99<span class="hstat-unit">%</span></span>
+                    <span class="hstat-label">Extraction accuracy</span>
+                </div>
+                <div class="hstat-divider"></div>
+                <div class="hstat">
+                    <span class="hstat-num">3<span class="hstat-unit">s</span></span>
+                    <span class="hstat-label">Avg. analysis time</span>
+                </div>
+                <div class="hstat-divider"></div>
+                <div class="hstat">
+                    <span class="hstat-num">50<span class="hstat-unit">+</span></span>
+                    <span class="hstat-label">Lab test types</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Animated doctor + report card -->
+        <div class="hero-visual">
+
+            <!-- Doctor SVG character -->
+            <div class="doctor-wrap">
+                <svg class="doctor-svg" viewBox="0 0 200 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Coat body -->
+                    <rect x="50" y="155" width="100" height="110" rx="12" fill="var(--coat)" class="doc-coat"/>
+                    <!-- Coat lapels -->
+                    <path d="M90 155 L100 185 L110 155" fill="var(--bg3)" class="doc-lapel"/>
+                    <!-- Stethoscope -->
+                    <path d="M75 185 Q65 195 68 210 Q72 228 88 228 Q104 228 104 212 Q104 200 96 197" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" fill="none" class="doc-steth"/>
+                    <circle cx="96" cy="196" r="5" fill="var(--accent)" class="doc-steth-head"/>
+                    <!-- Arms -->
+                    <rect x="28" y="158" width="26" height="70" rx="13" fill="var(--coat)" class="doc-arm-l"/>
+                    <rect x="146" y="158" width="26" height="70" rx="13" fill="var(--coat)" class="doc-arm-r"/>
+                    <!-- Hands -->
+                    <ellipse cx="41" cy="232" rx="13" ry="10" fill="var(--skin)" class="doc-hand"/>
+                    <ellipse cx="159" cy="232" rx="13" ry="10" fill="var(--skin)" class="doc-hand"/>
+                    <!-- Clipboard in right hand -->
+                    <rect x="148" y="205" width="28" height="36" rx="4" fill="var(--card)" stroke="var(--border-h)" stroke-width="1.5" class="doc-clipboard"/>
+                    <rect x="158" y="200" width="8" height="6" rx="2" fill="var(--accent)" class="doc-clip"/>
+                    <line x1="153" y1="218" x2="171" y2="218" stroke="var(--text-dim)" stroke-width="1.5" stroke-linecap="round"/>
+                    <line x1="153" y1="224" x2="168" y2="224" stroke="var(--text-dim)" stroke-width="1.5" stroke-linecap="round"/>
+                    <line x1="153" y1="230" x2="170" y2="230" stroke="var(--text-dim)" stroke-width="1.5" stroke-linecap="round"/>
+                    <!-- Neck -->
+                    <rect x="90" y="132" width="20" height="28" rx="8" fill="var(--skin)" class="doc-neck"/>
+                    <!-- Head -->
+                    <ellipse cx="100" cy="115" rx="34" ry="36" fill="var(--skin)" class="doc-head"/>
+                    <!-- Hair -->
+                    <path d="M66 108 Q68 75 100 72 Q132 75 134 108 Q126 85 100 84 Q74 85 66 108Z" fill="var(--hair)" class="doc-hair"/>
+                    <!-- Eyes -->
+                    <ellipse cx="88" cy="112" rx="5" ry="6" fill="white"/>
+                    <ellipse cx="112" cy="112" rx="5" ry="6" fill="white"/>
+                    <circle cx="89" cy="113" r="3" fill="var(--eye)" class="doc-eye"/>
+                    <circle cx="113" cy="113" r="3" fill="var(--eye)" class="doc-eye"/>
+                    <circle cx="90" cy="112" r="1" fill="white"/>
+                    <circle cx="114" cy="112" r="1" fill="white"/>
+                    <!-- Eyebrows -->
+                    <path d="M82 104 Q88 101 94 104" stroke="var(--hair)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                    <path d="M106 104 Q112 101 118 104" stroke="var(--hair)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                    <!-- Smile -->
+                    <path d="M91 128 Q100 136 109 128" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" fill="none" class="doc-smile"/>
+                    <!-- Cheeks -->
+                    <ellipse cx="78" cy="124" rx="8" ry="5" fill="var(--cheek)" opacity="0.45"/>
+                    <ellipse cx="122" cy="124" rx="8" ry="5" fill="var(--cheek)" opacity="0.45"/>
+                    <!-- Coat pocket -->
+                    <rect x="60" y="185" width="20" height="22" rx="4" fill="none" stroke="var(--border-h)" stroke-width="1.2"/>
+                    <!-- Pen in pocket -->
+                    <rect x="66" y="177" width="4" height="16" rx="2" fill="var(--accent)" opacity="0.9"/>
+                    <!-- ID badge -->
+                    <rect x="105" y="168" width="22" height="14" rx="3" fill="var(--blue-dim)" stroke="var(--blue-accent)" stroke-width="1"/>
+                    <text x="116" y="178" font-size="5" fill="var(--blue-accent)" text-anchor="middle" font-family="monospace">MD</text>
+                    <!-- Legs -->
+                    <rect x="68" y="262" width="24" height="38" rx="10" fill="var(--trouser)" class="doc-leg"/>
+                    <rect x="108" y="262" width="24" height="38" rx="10" fill="var(--trouser)" class="doc-leg"/>
+                    <!-- Shoes -->
+                    <ellipse cx="80" cy="300" rx="16" ry="8" fill="var(--shoe)"/>
+                    <ellipse cx="120" cy="300" rx="16" ry="8" fill="var(--shoe)"/>
+                </svg>
+
+                <!-- Heartbeat line under doctor -->
+                <div class="heartbeat-wrap" aria-hidden="true">
+                    <svg class="heartbeat-svg" viewBox="0 0 220 40" fill="none">
+                        <polyline points="0,20 30,20 40,5 50,35 60,5 70,35 80,20 120,20 130,8 145,32 155,20 220,20"
+                            stroke="var(--accent)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                            class="heartbeat-line"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Floating report preview card -->
+            <div class="report-preview-card">
+                <div class="rp-header">
+                    <div class="rp-icon">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <rect x="2" y="1" width="12" height="14" rx="2" stroke="currentColor" stroke-width="1.3"/>
+                            <path d="M5 5h6M5 8h6M5 11h4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <span class="rp-title">Blood Panel Report</span>
+                    <span class="rp-date">Nov 2025</span>
+                </div>
+                <div class="rp-rows">
+                    <div class="rp-row">
+                        <span class="rp-test">HbA1c</span>
+                        <span class="rp-val">6.2%</span>
+                        <span class="rp-status rp-high">↑ HIGH</span>
+                    </div>
+                    <div class="rp-row">
+                        <span class="rp-test">Hemoglobin</span>
+                        <span class="rp-val">13.8 g/dL</span>
+                        <span class="rp-status rp-normal">✓ NORMAL</span>
+                    </div>
+                    <div class="rp-row">
+                        <span class="rp-test">Creatinine</span>
+                        <span class="rp-val">1.4 mg/dL</span>
+                        <span class="rp-status rp-high">↑ HIGH</span>
+                    </div>
+                    <div class="rp-row">
+                        <span class="rp-test">Platelets</span>
+                        <span class="rp-val">220 K/μL</span>
+                        <span class="rp-status rp-normal">✓ NORMAL</span>
+                    </div>
+                </div>
+                <div class="rp-score-row">
+                    <span class="rp-score-label">Health Score</span>
+                    <div class="rp-score-bar">
+                        <div class="rp-score-fill" style="width:72%"></div>
+                    </div>
+                    <span class="rp-score-num">72</span>
+                </div>
+            </div>
+
+            <!-- Floating AI badge -->
+            <div class="ai-badge-float">
+                <span class="ai-badge-dot"></span>
+                AI analyzing…
+            </div>
+
+        </div><!-- /hero-visual -->
+    </div><!-- /hero-inner -->
+</section>
+
+<!-- ══════════════════════════════════════════════
+     MODULE CARDS
+══════════════════════════════════════════════ -->
+<section class="modules-section">
+    <div class="section-label">What you can do</div>
+    <h2 class="section-heading">Three powerful modules</h2>
+    <p class="section-sub">Each module is purpose-built to give you a different lens on your health data.</p>
+
+    <div class="module-cards">
+
+        <!-- M1 -->
+        <a href="/" class="module-card mc-1">
+            <div class="mc-number">01</div>
+            <div class="mc-icon-wrap">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <rect x="3" y="2" width="22" height="24" rx="3" stroke="currentColor" stroke-width="1.6"/>
+                    <path d="M8 8h12M8 13h12M8 18h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                    <circle cx="21" cy="21" r="5" fill="var(--bg)" stroke="var(--accent)" stroke-width="1.5"/>
+                    <path d="M19 21l1.3 1.3 2.2-2.2" stroke="var(--accent)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <div class="mc-badge">M1</div>
+            <h3 class="mc-title">Report Extractor</h3>
+            <p class="mc-desc">Upload any PDF lab report. AI extracts every test value, compares to normal ranges, and scores your overall health.</p>
+            <div class="mc-tags">
+                <span>PDF Upload</span><span>Auto-Extraction</span><span>Health Score</span>
+            </div>
+            <div class="mc-arrow">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M4 10h12M10 4l6 6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+        </a>
+
+        <!-- M2 -->
+        <a href="/module2" class="module-card mc-2">
+            <div class="mc-number">02</div>
+            <div class="mc-icon-wrap">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <path d="M4 5h20v14H16l-5 4V19H4V5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                    <path d="M9 11h10M9 15h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <div class="mc-badge">M2</div>
+            <h3 class="mc-title">RAG Knowledge</h3>
+            <p class="mc-desc">Chat naturally with your medical report. Ask "Why is my ALT high?" and get grounded, evidence-based answers.</p>
+            <div class="mc-tags">
+                <span>Conversational AI</span><span>RAG Pipeline</span><span>Report Context</span>
+            </div>
+            <div class="mc-arrow">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M4 10h12M10 4l6 6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+        </a>
+
+        <!-- M3 -->
+        <a href="/module3" class="module-card mc-3">
+            <div class="mc-number">03</div>
+            <div class="mc-icon-wrap">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                    <path d="M14 3C8 3 3 8 3 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                    <circle cx="14" cy="14" r="4" stroke="currentColor" stroke-width="1.6"/>
+                    <path d="M14 18v4M12 22h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                    <path d="M20 7l2-2M22 12h3M20 21l2 2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity="0.5"/>
+                </svg>
+            </div>
+            <div class="mc-badge">M3</div>
+            <h3 class="mc-title">AI Health Agents</h3>
+            <p class="mc-desc">Describe your symptoms. Our multi-step AI agent generates warnings, follow-up tests, diet plans, and lifestyle changes.</p>
+            <div class="mc-tags">
+                <span>Symptom Analysis</span><span>Diet Plan</span><span>PDF Report</span>
+            </div>
+            <div class="mc-arrow">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M4 10h12M10 4l6 6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+        </a>
+
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     HOW IT WORKS
+══════════════════════════════════════════════ -->
+<section class="how-section">
+    <div class="section-label">Simple process</div>
+    <h2 class="section-heading">From upload to insight in seconds</h2>
+
+    <div class="how-steps">
+        <div class="how-step">
+            <div class="how-num">01</div>
+            <div class="how-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 14V4M12 4L9 7M12 4l3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M4 17v1.5A1.5 1.5 0 005.5 20h13a1.5 1.5 0 001.5-1.5V17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <h4>Upload PDF</h4>
+            <p>Drag and drop your lab report. Any format from any laboratory.</p>
+        </div>
+        <div class="how-connector"><div class="how-connector-line"></div></div>
+        <div class="how-step">
+            <div class="how-num">02</div>
+            <div class="how-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
+                    <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h4>AI Extraction</h4>
+            <p>Every test value is pulled, classified, and compared to normal ranges.</p>
+        </div>
+        <div class="how-connector"><div class="how-connector-line"></div></div>
+        <div class="how-step">
+            <div class="how-num">03</div>
+            <div class="how-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M4 19h16M4 5l8 8 8-8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h4>Get Insights</h4>
+            <p>Review your health score, flagged values, and AI recommendations.</p>
+        </div>
+        <div class="how-connector"><div class="how-connector-line"></div></div>
+        <div class="how-step">
+            <div class="how-num">04</div>
+            <div class="how-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 6h18v12H13l-4 3V18H3V6Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                    <path d="M8 11h8M8 14h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <h4>Chat & Explore</h4>
+            <p>Ask follow-up questions. Get personalised diet and lifestyle advice.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     DISCLAIMER
+══════════════════════════════════════════════ -->
+<div class="landing-disclaimer">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.3"/>
+        <path d="M8 7v4M8 5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    MediScan AI is for informational purposes only and does not replace professional medical advice. Always consult a qualified healthcare provider.
+</div>
+
+<!-- ══════════════════════════════════════════════
+     FLOATING CHATBOT BUTTON
+══════════════════════════════════════════════ -->
+<button class="fab-chat" id="fabChat" onclick="toggleLandingChat()" aria-label="Open AI Chat">
+    <svg class="fab-icon-chat" width="26" height="26" viewBox="0 0 26 26" fill="none">
+        <path d="M4 4h18v14H14.5L10 21v-3H4V4Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+        <path d="M9 11h8M9 14.5h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+    </svg>
+    <svg class="fab-icon-close" width="22" height="22" viewBox="0 0 22 22" fill="none" style="display:none;">
+        <path d="M5 5l12 12M17 5L5 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+    </svg>
+    <span class="fab-pulse"></span>
+</button>
+
+<!-- ══════════════════════════════════════════════
+     FLOATING CHAT POPUP
+══════════════════════════════════════════════ -->
+<div class="chat-popup" id="chatPopup" role="dialog" aria-label="MediScan Quick Chat">
+    <div class="chat-popup-header">
+        <div class="cp-avatar">
+            <svg width="18" height="18" viewBox="0 0 22 22" fill="none">
+                <path d="M11 2v18M2 11h18M6 6l10 10M16 6L6 16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+        </div>
+        <div class="cp-info">
+            <span class="cp-name">MediScan AI</span>
+            <span class="cp-status"><span class="cp-dot"></span>Online</span>
+        </div>
+        <button class="cp-close" onclick="toggleLandingChat()" aria-label="Close chat">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+        </button>
+    </div>
+
+    <div class="chat-popup-messages" id="popupMessages">
+        <div class="popup-welcome">
+            <div class="pw-icon">👋</div>
+            <p>Hi! I'm MediScan AI. Ask me anything about medical lab values, symptoms, or health.</p>
+        </div>
+        <!-- Suggested quick questions -->
+        <div class="popup-chips" id="popupChips">
+            <button class="popup-chip" onclick="popupAsk(this, 'What does high creatinine mean?')">High creatinine?</button>
+            <button class="popup-chip" onclick="popupAsk(this, 'What is a normal HbA1c level?')">Normal HbA1c?</button>
+            <button class="popup-chip" onclick="popupAsk(this, 'What causes low hemoglobin?')">Low hemoglobin?</button>
+        </div>
+    </div>
+
+    <div class="chat-popup-input-row">
+        <input type="text" id="popupInput" class="popup-input"
+            placeholder="Ask a health question…"
+            onkeydown="if(event.key==='Enter') popupSubmit()">
+        <button class="popup-send" onclick="popupSubmit()">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path d="M2 9l14-7-5 7 5 7-14-7Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            </svg>
+        </button>
+    </div>
+</div>
+
+{% endblock %}

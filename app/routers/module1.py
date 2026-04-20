@@ -8,8 +8,15 @@ router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 
 
-@router.get("/", response_class=HTMLResponse)
-def home(request: Request):
+# ─────────────────────────────────────────────
+# 🧾 MODULE 1 HOME → /m1
+# ─────────────────────────────────────────────
+@router.get("/m1", response_class=HTMLResponse)
+def module1_home(request: Request):
+    """
+    Module 1 main page.
+    Shows upload UI OR results based on session.
+    """
     from app.core.store import report_store
 
     session_id = request.session.get("session_id")
@@ -25,23 +32,30 @@ def home(request: Request):
     )
 
 
-@router.post("/upload", response_class=HTMLResponse)
+# ─────────────────────────────────────────────
+# 📤 FILE UPLOAD → /m1/upload
+# ─────────────────────────────────────────────
+@router.post("/m1/upload", response_class=HTMLResponse)
 async def upload_file(request: Request, file: UploadFile = File(...)):
+    """
+    Handles PDF upload → runs extraction pipeline → stores result in session.
+    """
     from app.core.store import report_store
-
 
     contents = await file.read()
 
-    # ✅ Clear old session data from store
+    # 🧹 Clear old session data
     old_id = request.session.get("session_id")
     if old_id and old_id in report_store:
         del report_store[old_id]
 
-    # ✅ Run pipeline
+    # 🚀 Run extraction pipeline
     result = run_module1_pipeline(contents)
 
-    # ✅ Generate a new session ID and store full result server-side
+    # 🆔 Create new session ID
     session_id = str(uuid.uuid4())
+
+    # 📦 Store processed result
     report_store[session_id] = {
         "patient":     result.get("patient", {}),
         "summary":     result.get("summary", {}),
@@ -49,7 +63,7 @@ async def upload_file(request: Request, file: UploadFile = File(...)):
         "suggestions": result.get("suggestions", [])
     }
 
-    # ✅ Only store the tiny session_id in the cookie (never the full result)
+    # 🔐 Store only session ID in cookie
     request.session.clear()
     request.session["session_id"] = session_id
 
@@ -63,14 +77,22 @@ async def upload_file(request: Request, file: UploadFile = File(...)):
     )
 
 
-@router.post("/clear-session", response_class=HTMLResponse)
+# ─────────────────────────────────────────────
+# 🔄 CLEAR SESSION → /m1/clear-session
+# ─────────────────────────────────────────────
+@router.post("/m1/clear-session")
 async def clear_session(request: Request):
+    """
+    Clears stored report + session.
+    """
     from app.core.store import report_store
 
-
     session_id = request.session.get("session_id")
+
     if session_id and session_id in report_store:
         del report_store[session_id]
 
     request.session.clear()
-    return RedirectResponse(url="/", status_code=303)
+
+    # 🔁 Redirect back to module1 page
+    return RedirectResponse(url="/m1", status_code=303)

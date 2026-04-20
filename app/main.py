@@ -4,6 +4,8 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app.routers import module1, module2, module3   # 🔥 ADD module3
 from app.modules.module2_rag.knowledge_loader import load_knowledge_base
+from app.routers import landing
+
 
 import os
 from dotenv import load_dotenv
@@ -31,8 +33,12 @@ def startup_event():
     load_knowledge_base()
 
 # 🔗 Routers
-app.include_router(module1.router)
+
+app.include_router(landing.router)               # "/" → landing
+app.include_router(module1.router) # ✅ FIXED
 app.include_router(module2.router, prefix="/module2")
+app.include_router(module3.router, prefix="/module3")
+
 
 # 🔥 ADD THIS (Module-3)
 app.include_router(module3.router, prefix="/module3")
